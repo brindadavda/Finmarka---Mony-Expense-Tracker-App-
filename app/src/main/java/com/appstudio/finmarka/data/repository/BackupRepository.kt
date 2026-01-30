@@ -12,6 +12,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import java.io.OutputStreamWriter
 import java.text.SimpleDateFormat
@@ -39,18 +40,15 @@ class BackupRepository @Inject constructor(
 
     suspend fun exportToJson(uri: Uri): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            val transactions = mutableListOf<TransactionEntity>()
-            transactionDao.getAllTransactions().collect { transactions.addAll(it) }
-            val categories = mutableListOf<CategoryEntity>()
-            categoryDao.getAllCategories().collect { categories.addAll(it) }
-            val budgets = mutableListOf<BudgetEntity>()
-            budgetDao.getBudgetsForMonth(1, 2020).collect { } // get all via multiple months or add getAll
+            val transactions = transactionDao.getAllTransactions().first()
+            val categories = categoryDao.getAllCategories().first()
+            val budgets = budgetDao.getAllBudgets().first()
             context.contentResolver.openOutputStream(uri)?.use { out ->
                 OutputStreamWriter(out).use { writer ->
                     val data = BackupData(
                         transactions = transactions,
                         categories = categories,
-                        budgets = emptyList()
+                        budgets = budgets
                     )
                     writer.write(gson.toJson(data))
                 }
@@ -63,8 +61,7 @@ class BackupRepository @Inject constructor(
 
     suspend fun exportToCsv(uri: Uri): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            val transactions = mutableListOf<TransactionEntity>()
-            transactionDao.getAllTransactions().collect { transactions.addAll(it) }
+            val transactions = transactionDao.getAllTransactions().first()
             context.contentResolver.openOutputStream(uri)?.use { out ->
                 OutputStreamWriter(out).use { writer ->
                     writer.write("id,amount,currency,convertedAmount,type,categoryId,dateTime,note,paymentMode,createdTimestamp\n")

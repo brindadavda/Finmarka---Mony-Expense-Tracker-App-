@@ -4,14 +4,13 @@ import com.appstudio.finmarka.data.local.entity.CategoryEntity
 import com.appstudio.finmarka.data.model.TransactionType
 
 object DefaultCategories {
-    // Expense: Food, Transport, Stay, Shopping, Activities, Bills, Health, Others
+    // Expense: Food, Transport, Shopping, Bills, Entertainment, Health, Others
     private val expenseCategories = listOf(
         Triple("Food", "restaurant", "#4CAF50"),
         Triple("Transport", "directions_car", "#2196F3"),
-        Triple("Stay", "hotel", "#9C27B0"),
         Triple("Shopping", "shopping_cart", "#FF9800"),
-        Triple("Activities", "celebration", "#E91E63"),
         Triple("Bills", "receipt_long", "#607D8B"),
+        Triple("Entertainment", "movie", "#E91E63"),
         Triple("Health", "local_hospital", "#F44336"),
         Triple("Others", "category", "#795548")
     )
