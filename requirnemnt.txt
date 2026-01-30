@@ -1,0 +1,341 @@
+📱 Money Tracker App – Full Requirements ( APP Name -> Finmarka )
+
+Platform: Android
+Tech Stack: Kotlin, Jetpack Compose
+Backend: ❌ None (offline-first)
+Database: Room (SQLite)
+Architecture: MVVM
+Min SDK: 24+
+
+1️⃣ App Overview
+
+A personal finance app that allows users to:
+
+Track income & expenses
+
+Organize by categories
+
+Set budgets
+
+View reports & charts
+
+Keep data private & offline
+
+No login. No cloud dependency.
+
+2️⃣ Core Features (MVP)
+2.1 Transaction Management
+
+User can:
+
+Add income or expense
+
+Edit transaction
+
+Delete transaction
+
+Transaction fields:
+
+Amount (Double)
+
+Type (INCOME / EXPENSE)
+
+Category
+
+Date
+
+Note (optional)
+
+Payment mode (Cash / Bank / UPI / Card)
+
+Created timestamp
+
+2.2 Categories
+
+Default categories (preloaded):
+
+Food
+
+Transport
+
+Shopping
+
+Bills
+
+Entertainment
+
+Health
+
+Salary
+
+Business
+
+Others
+
+User can:
+
+Add custom category
+
+Edit category
+
+Delete category (with reassignment)
+
+2.3 Dashboard (Home Screen)
+
+Show:
+
+Total balance
+
+Total income
+
+Total expenses
+
+Recent transactions (last 5–10)
+
+Monthly summary
+
+2.4 Budget Management
+
+Create monthly budget per category
+
+Set spending limit
+
+Show:
+
+Used amount
+
+Remaining amount
+
+Over-budget warning
+
+2.5 Reports & Analytics
+
+Reports:
+
+Daily
+
+Monthly
+
+Yearly
+
+Charts:
+
+Pie chart (category-wise expenses)
+
+Bar chart (monthly income vs expense)
+
+Libraries:
+
+MPAndroidChart or Compose Charts
+
+2.6 Search & Filter
+
+Filter transactions by:
+
+Date range
+
+Category
+
+Amount
+
+Income / Expense
+
+3️⃣ Security & Privacy
+3.1 App Lock
+
+PIN lock (4–6 digits)
+
+Biometric (fingerprint)
+
+3.2 Data Privacy
+
+All data stored locally
+
+No internet required
+
+No ads SDK access to data
+
+4️⃣ Backup & Restore (Optional but Recommended)
+4.1 Local Backup
+
+Export data to:
+
+JSON
+
+CSV
+
+4.2 Restore
+
+Import backup file
+
+Validate before restore
+
+5️⃣ Non-Functional Requirements
+Requirement	Description
+Performance	Add transaction < 300ms
+Offline	Works without internet
+Reliability	No data loss
+UX	Minimal taps to add expense
+Accessibility	Large fonts support
+6️⃣ App Screens (Jetpack Compose)
+Navigation Structure
+Bottom Navigation
+├── Dashboard
+├── Transactions
+├── Add (+)
+├── Reports
+└── Settings
+
+Screen List
+6.1 Splash Screen
+
+App logo
+
+App lock check
+
+6.2 Dashboard Screen
+
+Balance card
+
+Income / Expense summary
+
+Recent transactions list
+
+6.3 Transactions Screen
+
+Full transaction list
+
+Filters & search
+
+Swipe to delete
+
+6.4 Add / Edit Transaction Screen
+
+Amount input
+
+Category selector
+
+Date picker
+
+Notes
+
+Save button
+
+6.5 Budget Screen
+
+List of category budgets
+
+Progress bars
+
+6.6 Reports Screen
+
+Charts
+
+Date selector
+
+6.7 Settings Screen
+
+Categories management
+
+Backup / Restore
+
+App lock
+
+Currency selection
+
+Theme (Light/Dark)
+
+7️⃣ Database Design (Room)
+7.1 TransactionEntity
+@Entity
+data class TransactionEntity(
+    @PrimaryKey(autoGenerate = true) val id: Int,
+    val amount: Double,
+    val type: String, // INCOME / EXPENSE
+    val categoryId: Int,
+    val date: Long,
+    val note: String?,
+    val paymentMode: String
+)
+
+7.2 CategoryEntity
+@Entity
+data class CategoryEntity(
+    @PrimaryKey(autoGenerate = true) val id: Int,
+    val name: String,
+    val type: String // INCOME / EXPENSE
+)
+
+7.3 BudgetEntity
+@Entity
+data class BudgetEntity(
+    @PrimaryKey(autoGenerate = true) val id: Int,
+    val categoryId: Int,
+    val limitAmount: Double,
+    val month: Int,
+    val year: Int
+)
+
+8️⃣ Architecture (MVVM)
+Layers:
+UI (Compose)
+↓
+ViewModel
+↓
+Repository
+↓
+Room DAO
+
+
+Use:
+
+StateFlow / Flow
+
+Hilt for DI
+
+9️⃣ Libraries & Tools
+Purpose	Library
+UI	Jetpack Compose
+DB	Room
+DI	Hilt
+Charts	MPAndroidChart
+Date	java.time
+Backup	Gson
+Biometric	androidx.biometric
+🔟 Play Store Readiness
+
+No backend = easier approval
+
+Privacy policy required (local data only)
+
+No sensitive permissions
+
+🧠 Future Enhancements (Phase 2)
+
+Google Drive sync
+
+Multi-currency
+
+Family sharing
+
+Subscription model
+
+AI insights
+
+✅ Final Recommendation
+
+Start with:
+
+Offline-only
+
+Simple UI
+
+Fast transaction entry
+
+This is 100% achievable with Kotlin + Jetpack Compose.
+
+If you want next:
+👉 Complete folder structure
+👉 ViewModel + Room DAO code
+👉 Jetpack Compose UI sample
+👉 Exact clone UI layout
