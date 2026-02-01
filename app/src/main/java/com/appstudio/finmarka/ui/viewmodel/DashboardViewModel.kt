@@ -1,9 +1,13 @@
 package com.appstudio.finmarka.ui.viewmodel
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appstudio.finmarka.data.local.PreferencesManager
 import com.appstudio.finmarka.domain.model.Transaction
 import com.appstudio.finmarka.data.repository.TransactionRepository
+import com.appstudio.finmarka.ui.util.formatCurrency
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,9 +28,11 @@ data class DashboardUiState(
     val isLoading: Boolean = false
 )
 
+@RequiresApi(Build.VERSION_CODES.O)
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
-    private val transactionRepository: TransactionRepository
+    private val transactionRepository: TransactionRepository,
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DashboardUiState())
@@ -36,6 +42,7 @@ class DashboardViewModel @Inject constructor(
         loadDashboard()
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun loadDashboard() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
@@ -62,5 +69,11 @@ class DashboardViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    // Helper to get currency from preferences
+    fun formatWithPrefCurrency(amount: Double): String {
+        val currency = preferencesManager.currencyCode
+        return formatCurrency(amount, currency)
     }
 }

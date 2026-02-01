@@ -61,7 +61,6 @@ class AddEditTransactionViewModel @Inject constructor(
                             isEdit = true,
                             transactionId = id,
                             amount = t.amount.toString(),
-                            currency = t.currency,
                             type = t.type,
                             categoryId = t.categoryId,
                             dateTime = t.dateTime,
@@ -121,7 +120,7 @@ class AddEditTransactionViewModel @Inject constructor(
                 _uiState.update { it.copy(error = "Select a category") }
                 return@launch
             }
-            val currency = state.currency.ifBlank { preferencesManager.currencyCode }
+            val currency =  preferencesManager.currencyCode
             val convertedAmount = amount // TODO: convert to base currency when multi-currency rates available
             try {
                 if (state.isEdit) {

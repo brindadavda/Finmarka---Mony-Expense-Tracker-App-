@@ -37,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.appstudio.finmarka.domain.model.Transaction
 import com.appstudio.finmarka.ui.theme.ExpenseRed
 import com.appstudio.finmarka.ui.theme.IncomeGreen
@@ -157,7 +158,8 @@ fun TransactionsScreen(
 private fun TransactionRow(
     transaction: Transaction,
     onClick: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    viewModel: TransactionsViewModel = hiltViewModel()
 ) {
     Card(
         modifier = Modifier
@@ -186,9 +188,9 @@ private fun TransactionRow(
                 )
             }
             Text(
-                text = if (transaction.type == TransactionType.INCOME) "+" else "-" + formatCurrency(transaction.convertedAmount),
+                text = transaction.displayAmount(viewModel.getCurrencyCode),
                 style = MaterialTheme.typography.titleMedium,
-                color = if (transaction.type == TransactionType.INCOME) IncomeGreen else ExpenseRed,
+                color = transaction.displayColor,
                 modifier = Modifier.padding(end = 8.dp)
             )
             IconButton(onClick = onDelete) {

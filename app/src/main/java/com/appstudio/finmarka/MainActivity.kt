@@ -1,9 +1,11 @@
 package com.appstudio.finmarka
 
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -17,8 +19,10 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -39,6 +43,7 @@ import com.appstudio.finmarka.ui.theme.FinmarkaTheme
 import dagger.hilt.android.AndroidEntryPoint
 import java.security.MessageDigest
 import javax.inject.Inject
+import com.appstudio.finmarka.ui.viewmodel.ThemeViewModel
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -46,11 +51,17 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var preferencesManager: PreferencesManager
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            FinmarkaTheme {
+            // ✅ Theme ViewModel
+            val themeViewModel: ThemeViewModel = hiltViewModel()
+            val darkTheme by themeViewModel.darkTheme.collectAsState()
+
+            // ✅ Apply Theme from Preferences
+            FinmarkaTheme(darkTheme = darkTheme ?: false) {
                 val navController = rememberNavController()
                 val showLock = preferencesManager.appLockEnabled && preferencesManager.pinHash != null
                 NavHost(
@@ -114,6 +125,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun MainScreen(
     navController: NavHostController,
@@ -181,7 +193,10 @@ private fun MainScreen(
                 SettingsScreen(
                     onNavigateToCategories = { navController.navigate("categories") },
                     onNavigateToBackupRestore = { navController.navigate("backup_restore") },
-                    onNavigateToAppLock = { }
+                    onNavigateToAppLock = { navController.navigate("app_lock") },
+                    onNavigateToAboutUs = { navController.navigate("about_us") },
+                    onNavigateToPrivacyPolicy = { navController.navigate("privacy_policy") },
+                    onNavigateToTerms = { navController.navigate("terms") }
                 )
             }
         }

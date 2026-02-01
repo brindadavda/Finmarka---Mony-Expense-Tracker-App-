@@ -1,5 +1,6 @@
 package com.appstudio.finmarka.ui.screens.addtransaction
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -28,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.appstudio.finmarka.data.model.PaymentMode
 import com.appstudio.finmarka.data.model.TransactionType
+import com.appstudio.finmarka.ui.theme.FinmarkaTheme
 import com.appstudio.finmarka.ui.viewmodel.AddEditTransactionViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -49,6 +51,7 @@ fun AddEditTransactionScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
@@ -68,7 +71,7 @@ fun AddEditTransactionScreen(
             singleLine = true
         )
         Spacer(modifier = Modifier.height(12.dp))
-        Text("Type", style = MaterialTheme.typography.labelMedium)
+        Text("Type", style = MaterialTheme.typography.labelMedium,  color = MaterialTheme.colorScheme.onPrimaryContainer)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -78,19 +81,19 @@ fun AddEditTransactionScreen(
                     selected = state.type == TransactionType.INCOME,
                     onClick = { viewModel.setType(TransactionType.INCOME) }
                 )
-                Text("Income", modifier = Modifier.clickable { viewModel.setType(TransactionType.INCOME) })
+                Text("Income",  color = MaterialTheme.colorScheme.onPrimaryContainer , modifier = Modifier.clickable { viewModel.setType(TransactionType.INCOME) })
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 RadioButton(
                     selected = state.type == TransactionType.EXPENSE,
                     onClick = { viewModel.setType(TransactionType.EXPENSE) }
                 )
-                Text("Expense", modifier = Modifier.clickable { viewModel.setType(TransactionType.EXPENSE) })
+                Text("Expense",  color = MaterialTheme.colorScheme.onPrimaryContainer , modifier = Modifier.clickable { viewModel.setType(TransactionType.EXPENSE) })
             }
         }
         Spacer(modifier = Modifier.height(12.dp))
         val filteredCategories = state.categories.filter { it.type == state.type }
-        Text("Category", style = MaterialTheme.typography.labelMedium)
+        Text("Category", style = MaterialTheme.typography.labelMedium,  color = MaterialTheme.colorScheme.onPrimaryContainer)
         filteredCategories.forEach { cat ->
             Row(
                 modifier = Modifier
@@ -103,16 +106,17 @@ fun AddEditTransactionScreen(
                     selected = state.categoryId == cat.id,
                     onClick = { viewModel.setCategoryId(cat.id) }
                 )
-                Text(cat.name)
+                Text(cat.name,  color = MaterialTheme.colorScheme.onPrimaryContainer)
             }
         }
         Spacer(modifier = Modifier.height(12.dp))
         Text(
             text = "Date & time: ${com.appstudio.finmarka.ui.util.formatDateTimeTravel(state.dateTime)}",
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onPrimaryContainer
         )
         Spacer(modifier = Modifier.height(12.dp))
-        Text("Payment mode", style = MaterialTheme.typography.labelMedium)
+        Text("Payment mode", style = MaterialTheme.typography.labelMedium,  color = MaterialTheme.colorScheme.onPrimaryContainer)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)

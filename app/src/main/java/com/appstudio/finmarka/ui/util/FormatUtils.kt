@@ -3,6 +3,7 @@ package com.appstudio.finmarka.ui.util
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.abs
 
 fun formatCurrency(amount: Double, currencyCode: String = "USD"): String {
     val symbol = when (currencyCode) {
@@ -12,7 +13,7 @@ fun formatCurrency(amount: Double, currencyCode: String = "USD"): String {
         "GBP" -> "£"
         else -> currencyCode
     }
-    return "$symbol ${String.format(Locale.US, "%.2f", kotlin.math.abs(amount))}"
+    return "$symbol ${String.format(Locale.US, "%.2f", amount)}"
 }
 
 fun formatDate(timestamp: Long): String {

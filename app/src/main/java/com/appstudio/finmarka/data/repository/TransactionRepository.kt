@@ -4,6 +4,7 @@ import com.appstudio.finmarka.data.local.dao.TransactionDao
 import com.appstudio.finmarka.data.local.entity.TransactionEntity
 import com.appstudio.finmarka.data.model.PaymentMode
 import com.appstudio.finmarka.data.model.TransactionType
+import com.appstudio.finmarka.domain.model.Category
 import com.appstudio.finmarka.domain.model.Transaction
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -139,7 +140,6 @@ class TransactionRepository @Inject constructor(
         return Transaction(
             id = id,
             amount = amount,
-            currency = currency,
             convertedAmount = convertedAmount,
             type = TransactionType.valueOf(type),
             categoryId = categoryId,
@@ -150,4 +150,9 @@ class TransactionRepository @Inject constructor(
             createdTimestamp = createdTimestamp
         )
     }
+
+    fun getAllCategories(): Flow<List<Category>> {
+        return categoryRepository.getCategoriesAsDomain()
+    }
+
 }

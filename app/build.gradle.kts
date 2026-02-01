@@ -82,8 +82,6 @@ dependencies {
     // JSON serialization library, works with the Kotlin serialization plugin
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
 
-    implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
-
 
     val lifecycle_version = "2.10.0"
     val arch_version = "2.2.0"
@@ -158,7 +156,7 @@ dependencies {
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
-//    implementation(libs.hilt.navigation.compose)
+    implementation(libs.hilt.navigation.compose)
 
     // Java language implementation
     implementation("androidx.biometric:biometric:1.1.0")

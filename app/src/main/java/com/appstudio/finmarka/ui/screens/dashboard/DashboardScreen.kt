@@ -1,5 +1,7 @@
 package com.appstudio.finmarka.ui.screens.dashboard
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -32,20 +34,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.appstudio.finmarka.domain.model.Transaction
 import com.appstudio.finmarka.ui.viewmodel.DashboardViewModel
 import com.appstudio.finmarka.ui.theme.ExpenseRed
 import com.appstudio.finmarka.ui.theme.IncomeGreen
-import com.appstudio.finmarka.ui.util.formatCurrency
 import com.appstudio.finmarka.ui.util.formatDateTimeTravel
 import com.appstudio.finmarka.data.model.TransactionType
+import com.appstudio.finmarka.ui.viewmodel.TransactionsViewModel
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun DashboardScreen(
     onNavigateToTransactions: () -> Unit,
     onNavigateToAddTransaction: () -> Unit,
     onTransactionClick: (Int) -> Unit,
-    viewModel: DashboardViewModel = hiltViewModel()
+    viewModel: DashboardViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -75,7 +80,7 @@ fun DashboardScreen(
                         CircularProgressIndicator(modifier = Modifier.size(32.dp))
                     } else {
                         Text(
-                            text = formatCurrency(state.totalBalance),
+                            text = viewModel.formatWithPrefCurrency(state.totalBalance),
                             style = MaterialTheme.typography.headlineMedium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
@@ -111,7 +116,7 @@ fun DashboardScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = formatCurrency(state.totalIncome),
+                                text = viewModel.formatWithPrefCurrency(state.totalIncome),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = IncomeGreen
                             )
@@ -141,7 +146,7 @@ fun DashboardScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = formatCurrency(state.totalExpense),
+                                text = viewModel.formatWithPrefCurrency(state.totalExpense),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = ExpenseRed
                             )
@@ -167,7 +172,7 @@ fun DashboardScreen(
                         modifier = Modifier.weight(1f)
                     )
                     Text(
-                        text = formatCurrency(state.todaySpending),
+                        text = viewModel.formatWithPrefCurrency(state.todaySpending),
                         style = MaterialTheme.typography.titleMedium,
                         color = ExpenseRed
                     )
@@ -208,7 +213,8 @@ fun DashboardScreen(
 @Composable
 private fun TransactionItem(
     transaction: Transaction,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    viewModel: TransactionsViewModel = hiltViewModel()
 ) {
     Card(
         modifier = Modifier
@@ -237,10 +243,11 @@ private fun TransactionItem(
                 )
             }
             Text(
-                text = if (transaction.type == TransactionType.INCOME) "+" else "-" + formatCurrency(transaction.convertedAmount),
+                text = transaction.displayAmount(viewModel.getCurrencyCode),
                 style = MaterialTheme.typography.titleMedium,
-                color = if (transaction.type == TransactionType.INCOME) IncomeGreen else ExpenseRed
+                color = transaction.displayColor
             )
+
         }
     }
 }
