@@ -3,6 +3,7 @@ package com.appstudio.finmarka.data.repository
 import com.appstudio.finmarka.data.local.dao.TransactionDao
 import com.appstudio.finmarka.data.local.entity.TransactionEntity
 import com.appstudio.finmarka.data.model.PaymentMode
+import com.appstudio.finmarka.data.model.TransactionStatus
 import com.appstudio.finmarka.data.model.TransactionType
 import com.appstudio.finmarka.domain.model.Category
 import com.appstudio.finmarka.domain.model.Transaction
@@ -78,7 +79,15 @@ class TransactionRepository @Inject constructor(
         categoryId: Int,
         dateTime: Long,
         note: String?,
-        paymentMode: PaymentMode
+        paymentMode: PaymentMode,
+        accountId: Int? = null,
+        merchantName: String? = null,
+        status: TransactionStatus = TransactionStatus.COMPLETED,
+        isRecurring: Boolean = false,
+        isReimbursement: Boolean = false,
+        isTemplate: Boolean = false,
+        isExcluded: Boolean = false,
+        attachmentUris: String? = null
     ): Long {
         return transactionDao.insert(
             TransactionEntity(
@@ -87,9 +96,17 @@ class TransactionRepository @Inject constructor(
                 convertedAmount = convertedAmount,
                 type = type.name,
                 categoryId = categoryId,
+                accountId = accountId,
+                merchantName = merchantName,
                 dateTime = dateTime,
                 note = note,
-                paymentMode = paymentMode.name
+                paymentMode = paymentMode.name,
+                status = status.name,
+                isRecurring = isRecurring,
+                isReimbursement = isReimbursement,
+                isTemplate = isTemplate,
+                isExcluded = isExcluded,
+                attachmentUris = attachmentUris
             )
         )
     }
@@ -103,7 +120,15 @@ class TransactionRepository @Inject constructor(
         categoryId: Int,
         dateTime: Long,
         note: String?,
-        paymentMode: PaymentMode
+        paymentMode: PaymentMode,
+        accountId: Int? = null,
+        merchantName: String? = null,
+        status: TransactionStatus = TransactionStatus.COMPLETED,
+        isRecurring: Boolean = false,
+        isReimbursement: Boolean = false,
+        isTemplate: Boolean = false,
+        isExcluded: Boolean = false,
+        attachmentUris: String? = null
     ) {
         val entity = transactionDao.getTransactionById(id) ?: return
         transactionDao.update(
@@ -113,9 +138,17 @@ class TransactionRepository @Inject constructor(
                 convertedAmount = convertedAmount,
                 type = type.name,
                 categoryId = categoryId,
+                accountId = accountId,
+                merchantName = merchantName,
                 dateTime = dateTime,
                 note = note,
-                paymentMode = paymentMode.name
+                paymentMode = paymentMode.name,
+                status = status.name,
+                isRecurring = isRecurring,
+                isReimbursement = isReimbursement,
+                isTemplate = isTemplate,
+                isExcluded = isExcluded,
+                attachmentUris = attachmentUris
             )
         )
     }
@@ -160,9 +193,17 @@ class TransactionRepository @Inject constructor(
             type = TransactionType.valueOf(type),
             categoryId = categoryId,
             categoryName = categoryName,
+            accountId = accountId,
+            merchantName = merchantName,
             dateTime = dateTime,
             note = note,
             paymentMode = PaymentMode.valueOf(paymentMode),
+            status = TransactionStatus.valueOf(status),
+            isRecurring = isRecurring,
+            isReimbursement = isReimbursement,
+            isTemplate = isTemplate,
+            isExcluded = isExcluded,
+            attachmentUris = attachmentUris,
             createdTimestamp = createdTimestamp
         )
     }
