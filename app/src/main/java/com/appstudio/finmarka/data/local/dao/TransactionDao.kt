@@ -59,6 +59,18 @@ interface TransactionDao {
     @Query("SELECT COALESCE(SUM(convertedAmount), 0) FROM transactions WHERE type = 'EXPENSE' AND dateTime >= :startDate AND dateTime <= :endDate")
     suspend fun getTotalExpense(startDate: Long, endDate: Long): Double
 
+    @Query("SELECT COALESCE(SUM(convertedAmount), 0) FROM transactions WHERE type = 'INCOME'")
+    fun getTotalIncomeFlow(): Flow<Double>
+
+    @Query("SELECT COALESCE(SUM(convertedAmount), 0) FROM transactions WHERE type = 'EXPENSE'")
+    fun getTotalExpenseFlow(): Flow<Double>
+
+    @Query("SELECT COALESCE(SUM(convertedAmount), 0) FROM transactions WHERE type = 'INCOME' AND dateTime >= :startDate AND dateTime <= :endDate")
+    fun getTotalIncomeFlow(startDate: Long, endDate: Long): Flow<Double>
+
+    @Query("SELECT COALESCE(SUM(convertedAmount), 0) FROM transactions WHERE type = 'EXPENSE' AND dateTime >= :startDate AND dateTime <= :endDate")
+    fun getTotalExpenseFlow(startDate: Long, endDate: Long): Flow<Double>
+
     @Query("SELECT * FROM transactions WHERE (note LIKE '%' || :query || '%' OR amount = :amountQuery) AND dateTime >= :startDate AND dateTime <= :endDate ORDER BY dateTime DESC")
     fun searchTransactions(
         query: String,

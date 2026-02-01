@@ -1,39 +1,45 @@
 package com.appstudio.finmarka.ui.screens.addtransaction
 
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.appstudio.finmarka.data.model.PaymentMode
 import com.appstudio.finmarka.data.model.TransactionType
-import com.appstudio.finmarka.ui.theme.FinmarkaTheme
 import com.appstudio.finmarka.ui.viewmodel.AddEditTransactionViewModel
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,9 +58,49 @@ fun AddEditTransactionScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(androidx.compose.foundation.rememberScrollState())
+            .windowInsetsPadding(WindowInsets.statusBars.union(WindowInsets.navigationBars))
             .padding(16.dp)
     ) {
+        val context = LocalContext.current
+        val calendar = remember(state.dateTime) {
+            Calendar.getInstance().apply { timeInMillis = state.dateTime }
+        }
+        val datePickerDialog = remember(state.dateTime) {
+            DatePickerDialog(
+                context,
+                { _, year, month, day ->
+                    val updated = Calendar.getInstance().apply {
+                        timeInMillis = state.dateTime
+                        set(Calendar.YEAR, year)
+                        set(Calendar.MONTH, month)
+                        set(Calendar.DAY_OF_MONTH, day)
+                    }
+                    viewModel.setDateTime(updated.timeInMillis)
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+            ).apply {
+                datePicker.maxDate = Long.MAX_VALUE
+            }
+        }
+        val timePickerDialog = remember(state.dateTime) {
+            TimePickerDialog(
+                context,
+                { _, hour, minute ->
+                    val updated = Calendar.getInstance().apply {
+                        timeInMillis = state.dateTime
+                        set(Calendar.HOUR_OF_DAY, hour)
+                        set(Calendar.MINUTE, minute)
+                    }
+                    viewModel.setDateTime(updated.timeInMillis)
+                },
+                calendar.get(Calendar.HOUR_OF_DAY),
+                calendar.get(Calendar.MINUTE),
+                false
+            )
+        }
         Text(
             text = if (state.isEdit) "Edit Transaction" else "Add Transaction",
             style = MaterialTheme.typography.headlineSmall,
@@ -115,6 +161,15 @@ fun AddEditTransactionScreen(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onPrimaryContainer
         )
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            OutlinedButton(onClick = { datePickerDialog.show() }) {
+                Text("Select date")
+            }
+            OutlinedButton(onClick = { timePickerDialog.show() }) {
+                Text("Select time")
+            }
+        }
         Spacer(modifier = Modifier.height(12.dp))
         Text("Payment mode", style = MaterialTheme.typography.labelMedium,  color = MaterialTheme.colorScheme.onPrimaryContainer)
         Row(

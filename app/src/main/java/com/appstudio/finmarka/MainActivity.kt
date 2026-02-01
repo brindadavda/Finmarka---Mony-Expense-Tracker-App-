@@ -13,9 +13,6 @@ import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,6 +28,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.appstudio.finmarka.data.local.PreferencesManager
+import com.appstudio.finmarka.ui.components.BottomNavItem
+import com.appstudio.finmarka.ui.components.FinmarkaBottomBar
 import com.appstudio.finmarka.ui.screens.addtransaction.AddEditTransactionScreen
 import com.appstudio.finmarka.ui.screens.budget.BudgetScreen
 import com.appstudio.finmarka.ui.screens.dashboard.DashboardScreen
@@ -61,7 +60,7 @@ class MainActivity : ComponentActivity() {
             val darkTheme by themeViewModel.darkTheme.collectAsState()
 
             // ✅ Apply Theme from Preferences
-            FinmarkaTheme(darkTheme = darkTheme ?: false) {
+            FinmarkaTheme(darkTheme = darkTheme) {
                 val navController = rememberNavController()
                 val showLock = preferencesManager.appLockEnabled && preferencesManager.pinHash != null
                 NavHost(
@@ -135,32 +134,28 @@ private fun MainScreen(
     val navBackStackEntry by navControllerInner.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val showBottomBar = currentDestination?.route in listOf("dashboard", "transactions", "add", "reports", "settings")
+    val bottomBarItems = listOf(
+        BottomNavItem("dashboard", Icons.Default.Home, "Dashboard"),
+        BottomNavItem("transactions", Icons.Default.List, "Transactions"),
+        BottomNavItem("add", Icons.Default.Add, "Add"),
+        BottomNavItem("reports", Icons.Default.BarChart, "Reports"),
+        BottomNavItem("settings", Icons.Default.Settings, "Settings")
+    )
 
     Scaffold(
         bottomBar = {
             if (showBottomBar) {
-                NavigationBar {
-                    listOf(
-                        Triple("dashboard", Icons.Default.Home, "Dashboard"),
-                        Triple("transactions", Icons.Default.List, "Transactions"),
-                        Triple("add", Icons.Default.Add, "Add"),
-                        Triple("reports", Icons.Default.BarChart, "Reports"),
-                        Triple("settings", Icons.Default.Settings, "Settings")
-                    ).forEach { (route, icon, label) ->
-                        NavigationBarItem(
-                            icon = { Icon(icon, contentDescription = label) },
-                            label = { Text(label) },
-                            selected = currentDestination?.hierarchy?.any { it.route == route } == true,
-                            onClick = {
-                                navControllerInner.navigate(route) {
-                                    popUpTo(navControllerInner.graph.findStartDestination().id) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            }
-                        )
+                FinmarkaBottomBar(
+                    currentDestination = currentDestination,
+                    items = bottomBarItems,
+                    onNavigate = { route ->
+                        navControllerInner.navigate(route) {
+                            popUpTo(navControllerInner.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
-                }
+                )
             }
         }
     ) { paddingValues ->
