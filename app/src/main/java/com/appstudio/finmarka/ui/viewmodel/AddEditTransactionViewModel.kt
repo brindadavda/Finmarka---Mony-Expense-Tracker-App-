@@ -158,6 +158,7 @@ class AddEditTransactionViewModel @Inject constructor(
             }
             val currency =  preferencesManager.currencyCode
             val convertedAmount = amount // TODO: convert to base currency when multi-currency rates available
+            val attachmentUris = state.attachments.joinToString(",").ifBlank { null }
             try {
                 if (state.isEdit) {
                     transactionRepository.updateTransaction(
@@ -169,7 +170,11 @@ class AddEditTransactionViewModel @Inject constructor(
                         categoryId = categoryId,
                         dateTime = state.dateTime,
                         note = state.note.ifBlank { null },
-                        paymentMode = state.paymentMode
+                        paymentMode = state.paymentMode,
+                        merchantName = state.merchantName.ifBlank { null },
+                        status = state.status,
+                        isRecurring = state.isRecurring,
+                        attachmentUris = attachmentUris
                     )
                 } else {
                     transactionRepository.insertTransaction(
@@ -180,7 +185,11 @@ class AddEditTransactionViewModel @Inject constructor(
                         categoryId = categoryId,
                         dateTime = state.dateTime,
                         note = state.note.ifBlank { null },
-                        paymentMode = state.paymentMode
+                        paymentMode = state.paymentMode,
+                        merchantName = state.merchantName.ifBlank { null },
+                        status = state.status,
+                        isRecurring = state.isRecurring,
+                        attachmentUris = attachmentUris
                     )
                 }
                 _uiState.update { it.copy(saveSuccess = true, error = null) }
