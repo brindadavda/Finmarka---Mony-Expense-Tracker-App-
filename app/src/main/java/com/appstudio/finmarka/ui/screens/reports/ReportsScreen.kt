@@ -2,8 +2,10 @@ package com.appstudio.finmarka.ui.screens.reports
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,6 +43,7 @@ fun ReportsScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .windowInsetsPadding(WindowInsets.safeDrawing)
             .padding(20.dp)
     ) {
 
@@ -166,9 +169,10 @@ fun ChartBar(
                 .height(18.dp)
                 .background(MaterialTheme.colorScheme.surfaceVariant)
         ) {
+            val fillFraction = if (maxValue == 0f) 0f else value / maxValue
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(value / maxValue)
+                    .fillMaxWidth(fillFraction)
                     .height(18.dp)
                     .background(color)
             )

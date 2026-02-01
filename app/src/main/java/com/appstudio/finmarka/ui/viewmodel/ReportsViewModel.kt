@@ -1,24 +1,17 @@
 package com.appstudio.finmarka.ui.viewmodel
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appstudio.finmarka.data.local.PreferencesManager
 import com.appstudio.finmarka.data.model.ReportItem
-import com.appstudio.finmarka.data.model.TransactionType
 import com.appstudio.finmarka.data.repository.TransactionRepository
 import com.appstudio.finmarka.domain.model.Transaction
 import com.appstudio.finmarka.ui.util.formatCurrency
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
-import java.io.File
-import java.io.FileWriter
-import java.sql.Date
-import java.text.SimpleDateFormat
-import java.util.Locale
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -39,17 +32,19 @@ class ReportsViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            transactionRepository.getAllTransactions()
-                .collect { transactions ->
-                    val income = transactions.filter { it.type.name == "INCOME" }.sumOf { it.amount }
-                    val expense = transactions.filter { it.type.name == "EXPENSE" }.sumOf { it.amount }
+            val incomeFlow = transactionRepository.getTotalIncomeFlow()
+            val expenseFlow = transactionRepository.getTotalExpenseFlow()
+            val transactionsFlow = transactionRepository.getAllTransactions()
 
-                    _uiState.value = ReportsUiState(
-                        totalIncome = income,
-                        totalExpense = expense,
-                        transactions = transactions
-                    )
-                }
+            combine(incomeFlow, expenseFlow, transactionsFlow) { income, expense, transactions ->
+                ReportsUiState(
+                    totalIncome = income,
+                    totalExpense = expense,
+                    transactions = transactions
+                )
+            }.collect { state ->
+                _uiState.value = state
+            }
         }
     }
 
@@ -68,4 +63,3 @@ class ReportsViewModel @Inject constructor(
         return formatCurrency(amount, currency)
     }
 }
-

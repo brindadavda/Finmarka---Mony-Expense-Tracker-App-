@@ -30,15 +30,13 @@ fun SettingsScreen(
     val currency by viewModel.currency.collectAsState()
     val theme by viewModel.theme.collectAsState()
 
-    var currencyExpanded by remember { mutableStateOf("INR") }
-    var themeExpanded by remember { mutableStateOf("System") }
-
     val currencies = listOf("USD", "INR", "EUR", "GBP")
     val themes = listOf("System", "Dark", "Light")
 
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.safeDrawing)
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {

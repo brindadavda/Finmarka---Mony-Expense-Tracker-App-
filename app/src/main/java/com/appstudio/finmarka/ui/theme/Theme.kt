@@ -61,21 +61,22 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun FinmarkaTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean? = null,
     dynamicColor: Boolean = false, // 🔥 Turn OFF for custom finance colors
     content: @Composable () -> Unit
 ) {
+    val useDarkTheme = darkTheme ?: isSystemInDarkTheme()
 
     val colorScheme = when {
         // Dynamic color (Android 12+) optional
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context)
+            if (useDarkTheme) dynamicDarkColorScheme(context)
             else dynamicLightColorScheme(context)
         }
 
         // Dark Mode
-        darkTheme -> DarkColorScheme
+        useDarkTheme -> DarkColorScheme
 
         // Light Mode
         else -> LightColorScheme

@@ -132,6 +132,22 @@ class TransactionRepository @Inject constructor(
         return transactionDao.getTotalExpense(startDate, endDate)
     }
 
+    fun getTotalIncomeFlow(): Flow<Double> {
+        return transactionDao.getTotalIncomeFlow()
+    }
+
+    fun getTotalExpenseFlow(): Flow<Double> {
+        return transactionDao.getTotalExpenseFlow()
+    }
+
+    fun getTotalIncomeFlow(startDate: Long, endDate: Long): Flow<Double> {
+        return transactionDao.getTotalIncomeFlow(startDate, endDate)
+    }
+
+    fun getTotalExpenseFlow(startDate: Long, endDate: Long): Flow<Double> {
+        return transactionDao.getTotalExpenseFlow(startDate, endDate)
+    }
+
     suspend fun getExpenseByCategory(categoryId: Int, startDate: Long, endDate: Long): Double {
         return transactionDao.getExpenseSumByCategory(categoryId, startDate, endDate)
     }

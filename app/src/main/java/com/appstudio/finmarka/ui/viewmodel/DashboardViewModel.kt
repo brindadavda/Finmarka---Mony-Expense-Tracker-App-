@@ -12,6 +12,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -45,7 +46,6 @@ class DashboardViewModel @Inject constructor(
     @RequiresApi(Build.VERSION_CODES.O)
     fun loadDashboard() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
             val zone = ZoneId.systemDefault()
             val now = YearMonth.now()
             val startOfMonth = now.atDay(1).atStartOfDay(zone).toInstant().toEpochMilli()
@@ -53,20 +53,23 @@ class DashboardViewModel @Inject constructor(
             val today = LocalDate.now()
             val startOfToday = today.atStartOfDay(zone).toInstant().toEpochMilli()
             val endOfToday = today.atTime(23, 59, 59, 999_999_999).atZone(zone).toInstant().toEpochMilli()
-            val income = transactionRepository.getTotalIncome(startOfMonth, endOfMonth)
-            val expense = transactionRepository.getTotalExpense(startOfMonth, endOfMonth)
-            val todaySpending = transactionRepository.getTotalExpense(startOfToday, endOfToday)
-            transactionRepository.getRecentTransactions(10).collect { recent ->
-                _uiState.update {
-                    it.copy(
-                        totalIncome = income,
-                        totalExpense = expense,
-                        totalBalance = income - expense,
-                        todaySpending = todaySpending,
-                        recentTransactions = recent,
-                        isLoading = false
-                    )
-                }
+            _uiState.update { it.copy(isLoading = true) }
+            val incomeFlow = transactionRepository.getTotalIncomeFlow(startOfMonth, endOfMonth)
+            val expenseFlow = transactionRepository.getTotalExpenseFlow(startOfMonth, endOfMonth)
+            val todaySpendingFlow = transactionRepository.getTotalExpenseFlow(startOfToday, endOfToday)
+            val recentFlow = transactionRepository.getRecentTransactions(10)
+
+            combine(incomeFlow, expenseFlow, todaySpendingFlow, recentFlow) { income, expense, todaySpending, recent ->
+                DashboardUiState(
+                    totalIncome = income,
+                    totalExpense = expense,
+                    totalBalance = income - expense,
+                    todaySpending = todaySpending,
+                    recentTransactions = recent,
+                    isLoading = false
+                )
+            }.collect { newState ->
+                _uiState.value = newState
             }
         }
     }

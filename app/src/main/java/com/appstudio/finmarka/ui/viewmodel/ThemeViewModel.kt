@@ -1,26 +1,31 @@
 package com.appstudio.finmarka.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
-import com.appstudio.finmarka.data.local.PreferencesManager
+import androidx.lifecycle.viewModelScope
+import com.appstudio.finmarka.data.local.UserPreferencesDataStore
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class ThemeViewModel @Inject constructor(
-    private val preferencesManager: PreferencesManager
+    private val userPreferencesDataStore: UserPreferencesDataStore
 ) : ViewModel() {
 
     // ✅ StateFlow for theme
-    private val _darkTheme =
-        MutableStateFlow(preferencesManager.darkTheme)
-
-    val darkTheme: StateFlow<Boolean?> = _darkTheme
+    val darkTheme: StateFlow<Boolean?> = userPreferencesDataStore.themeFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = null
+    )
 
     // ✅ Update Theme
     fun setTheme(value: Boolean?) {
-        preferencesManager.darkTheme = value
-        _darkTheme.value = value
+        viewModelScope.launch {
+            userPreferencesDataStore.setTheme(value)
+        }
     }
 }
