@@ -210,9 +210,9 @@ fun AddEditTransactionScreen(
         }
         Spacer(modifier = Modifier.height(12.dp))
         Text("Status", style = MaterialTheme.typography.labelMedium,  color = MaterialTheme.colorScheme.onPrimaryContainer)
-        Row(
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             TransactionStatus.entries.forEach { status ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -225,16 +225,22 @@ fun AddEditTransactionScreen(
             }
         }
         Spacer(modifier = Modifier.height(12.dp))
-        Row(
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text("Recurring Transaction", style = MaterialTheme.typography.labelMedium)
-            Switch(
-                checked = state.isRecurring,
-                onCheckedChange = { viewModel.toggleRecurring() }
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(if (state.isRecurring) "Enabled" else "Disabled")
+                Switch(
+                    checked = state.isRecurring,
+                    onCheckedChange = { viewModel.toggleRecurring() }
+                )
+            }
         }
         Spacer(modifier = Modifier.height(12.dp))
         Text("Payment mode", style = MaterialTheme.typography.labelMedium,  color = MaterialTheme.colorScheme.onPrimaryContainer)
