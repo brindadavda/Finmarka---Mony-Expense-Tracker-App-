@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.EventNote
 import androidx.compose.material.icons.filled.FilePresent
 import androidx.compose.material.icons.filled.FormatListBulleted
@@ -51,6 +52,7 @@ fun MoreScreen(
 ) {
     val items = listOf(
         MoreItem("Accounts", "Manage cash, bank, and wallet accounts", "accounts", Icons.Default.AccountBalanceWallet),
+        MoreItem("Budget", "Plan monthly spending and alerts", "budget", Icons.Default.CreditCard),
         MoreItem("Categories", "Income & expense categories", "categories", Icons.Default.FormatListBulleted),
         MoreItem("Merchants", "Sources, payees, and vendors", "merchants", Icons.Default.Person),
         MoreItem("Assets", "Track assets & net worth", "assets", Icons.Default.Wallet),

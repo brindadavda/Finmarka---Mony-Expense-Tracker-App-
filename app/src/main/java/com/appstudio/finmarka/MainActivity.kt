@@ -9,10 +9,10 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -195,12 +195,12 @@ private fun MainScreen(
     val navControllerInner = rememberNavController()
     val navBackStackEntry by navControllerInner.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
-    val showBottomBar = currentDestination?.route in listOf("home", "transactions", "reports", "budget", "more")
+    val showBottomBar = currentDestination?.route in listOf("home", "transactions", "reports", "settings", "more")
     val bottomBarItems = listOf(
         BottomNavItem("home", Icons.Default.Home, "Home"),
         BottomNavItem("transactions", Icons.Default.List, "Transactions"),
         BottomNavItem("reports", Icons.Default.BarChart, "Reports"),
-        BottomNavItem("budget", Icons.Default.CreditCard, "Budget"),
+        BottomNavItem("settings", Icons.Default.Settings, "Settings"),
         BottomNavItem("more", Icons.Default.Menu, "More")
     )
 
@@ -241,9 +241,6 @@ private fun MainScreen(
             composable("reports") {
                 ReportsScreen()
             }
-            composable("budget") {
-                BudgetScreen()
-            }
             composable("more") {
                 MoreScreen(
                     onNavigate = { route -> navController.navigate(route) },
@@ -259,6 +256,9 @@ private fun MainScreen(
                     onNavigateToPrivacyPolicy = { navController.navigate("privacy_policy") },
                     onNavigateToTerms = { navController.navigate("terms") }
                 )
+            }
+            composable("budget") {
+                BudgetScreen()
             }
             composable("templates") {
                 TemplatesScreen()
