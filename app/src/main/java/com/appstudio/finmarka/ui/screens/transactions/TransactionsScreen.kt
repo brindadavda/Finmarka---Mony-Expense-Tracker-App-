@@ -1,12 +1,12 @@
 package com.appstudio.finmarka.ui.screens.transactions
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,12 +14,17 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.NorthEast
+import androidx.compose.material.icons.filled.SouthWest
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -31,7 +36,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -43,12 +53,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.appstudio.finmarka.domain.model.Transaction
 import com.appstudio.finmarka.ui.theme.ExpenseRed
-import com.appstudio.finmarka.ui.theme.IncomeGreen
-import com.appstudio.finmarka.ui.util.formatCurrency
 import com.appstudio.finmarka.ui.util.formatDateTimeTravel
+import com.appstudio.finmarka.data.model.TransactionStatus
 import com.appstudio.finmarka.data.model.TransactionType
 import com.appstudio.finmarka.ui.viewmodel.TransactionsViewModel
 
@@ -62,11 +70,30 @@ fun TransactionsScreen(
     var categoryExpanded by remember { mutableStateOf(false) }
     var typeExpanded by remember { mutableStateOf(false) }
 
+    var selectedTab by remember { mutableStateOf(0) }
+    val tabs = listOf(
+        "All",
+        "Recurring",
+        "Reimbursement",
+        "Templates",
+        "Excluded",
+        "Pending"
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .windowInsetsPadding(WindowInsets.statusBars.union(WindowInsets.navigationBars))
     ) {
+        TabRow(selectedTabIndex = selectedTab) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTab == index,
+                    onClick = { selectedTab = index },
+                    text = { Text(title) }
+                )
+            }
+        }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -147,17 +174,51 @@ fun TransactionsScreen(
                 CircularProgressIndicator()
             }
         } else {
+            val filteredByTab = state.transactions.filter { transaction ->
+                when (tabs[selectedTab]) {
+                    "Recurring" -> transaction.isRecurring
+                    "Reimbursement" -> transaction.isReimbursement
+                    "Templates" -> transaction.isTemplate
+                    "Excluded" -> transaction.isExcluded || transaction.status == TransactionStatus.EXCLUDED
+                    "Pending" -> transaction.status == TransactionStatus.PENDING
+                    else -> true
+                }
+            }
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(state.transactions) { t ->
-                    TransactionRow(
-                        transaction = t,
-                        onClick = { onTransactionClick(t.id) },
-                        onDelete = { viewModel.deleteTransaction(t.id) }
+                items(filteredByTab, key = { it.id }) { t ->
+                    val dismissState = rememberSwipeToDismissBoxState(
+                        confirmValueChange = { value ->
+                            if (value == SwipeToDismissBoxValue.EndToStart || value == SwipeToDismissBoxValue.StartToEnd) {
+                                viewModel.deleteTransaction(t.id)
+                                true
+                            } else {
+                                false
+                            }
+                        }
                     )
+                    SwipeToDismissBox(
+                        state = dismissState,
+                        backgroundContent = {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.CenterEnd
+                            ) {
+                                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = ExpenseRed)
+                            }
+                        }
+                    ) {
+                        TransactionRow(
+                            transaction = t,
+                            onClick = { onTransactionClick(t.id) },
+                            onDelete = { viewModel.deleteTransaction(t.id) }
+                        )
+                    }
                 }
             }
         }
@@ -185,7 +246,13 @@ private fun TransactionRow(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            Icon(
+                imageVector = if (transaction.type == TransactionType.INCOME) Icons.Default.SouthWest else Icons.Default.NorthEast,
+                contentDescription = null,
+                tint = transaction.displayColor
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
                     text = transaction.categoryName,
                     style = MaterialTheme.typography.titleSmall,
@@ -200,6 +267,24 @@ private fun TransactionRow(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    val tags = buildList {
+                        add(transaction.status.name.lowercase().replaceFirstChar { it.uppercase() })
+                        if (transaction.isRecurring) add("Recurring")
+                        if (transaction.isReimbursement) add("Reimbursement")
+                        if (transaction.isTemplate) add("Template")
+                        if (transaction.isExcluded) add("Excluded")
+                    }
+                    tags.take(3).forEach { tag ->
+                        AssistChip(
+                            onClick = { },
+                            label = { Text(tag) },
+                            colors = AssistChipDefaults.assistChipColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            )
+                        )
+                    }
+                }
             }
             Text(
                 text = transaction.displayAmount(viewModel.getCurrencyCode),
