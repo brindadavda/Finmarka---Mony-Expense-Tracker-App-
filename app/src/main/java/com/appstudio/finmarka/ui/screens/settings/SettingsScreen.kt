@@ -36,7 +36,7 @@ fun SettingsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.systemBars)
+            .windowInsetsPadding(WindowInsets.statusBars.union(WindowInsets.navigationBars))
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {

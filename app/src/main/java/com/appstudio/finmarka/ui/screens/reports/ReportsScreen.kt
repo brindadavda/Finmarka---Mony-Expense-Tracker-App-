@@ -43,7 +43,7 @@ fun ReportsScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .windowInsetsPadding(WindowInsets.systemBars)
+            .windowInsetsPadding(WindowInsets.statusBars.union(WindowInsets.navigationBars))
             .padding(20.dp)
     ) {
 

@@ -62,7 +62,7 @@ fun TransactionsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.systemBars)
+            .windowInsetsPadding(WindowInsets.statusBars.union(WindowInsets.navigationBars))
     ) {
         Row(
             modifier = Modifier

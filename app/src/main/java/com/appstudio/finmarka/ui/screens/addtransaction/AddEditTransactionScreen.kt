@@ -57,7 +57,7 @@ fun AddEditTransactionScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
-            .windowInsetsPadding(WindowInsets.systemBars)
+            .windowInsetsPadding(WindowInsets.statusBars.union(WindowInsets.navigationBars))
             .padding(16.dp)
     ) {
         val context = LocalContext.current
