@@ -68,7 +68,7 @@ fun MoreScreen(
         MoreItem("Calculators", "EMI, loan, savings tools", "calculators", Icons.Default.TipsAndUpdates),
         MoreItem("Templates", "Reusable transaction templates", "templates", Icons.Default.FilePresent),
         MoreItem("Backup & Restore", "Offline backup and restore", "backup_restore", Icons.Default.Backup, useRootNav = true),
-        MoreItem("Settings", "Themes, currency, privacy", "settings", Icons.Default.Settings, useRootNav = true)
+        MoreItem("Settings", "Themes, currency, privacy", "settings", Icons.Default.Settings)
     )
 
     ModuleScaffold(title = "More", subtitle = "Manage all finance modules and tools") {
