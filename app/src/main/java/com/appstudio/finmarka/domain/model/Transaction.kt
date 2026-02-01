@@ -4,6 +4,7 @@ import android.icu.util.Currency
 import androidx.compose.ui.graphics.Color
 import com.appstudio.finmarka.data.local.PreferencesManager
 import com.appstudio.finmarka.data.model.PaymentMode
+import com.appstudio.finmarka.data.model.TransactionStatus
 import com.appstudio.finmarka.data.model.TransactionType
 import com.appstudio.finmarka.ui.theme.ExpenseRed
 import com.appstudio.finmarka.ui.theme.IncomeGreen
@@ -16,9 +17,17 @@ data class Transaction(
     val type: TransactionType,
     val categoryId: Int,
     val categoryName: String = "",
+    val accountId: Int? = null,
+    val merchantName: String? = null,
     val dateTime: Long,
     val note: String?,
     val paymentMode: PaymentMode,
+    val status: TransactionStatus = TransactionStatus.COMPLETED,
+    val isRecurring: Boolean = false,
+    val isReimbursement: Boolean = false,
+    val isTemplate: Boolean = false,
+    val isExcluded: Boolean = false,
+    val attachmentUris: String? = null,
     val createdTimestamp: Long
 ) {
     // Formatted display amount with + / - sign

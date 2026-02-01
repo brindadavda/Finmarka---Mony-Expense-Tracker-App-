@@ -6,9 +6,13 @@ import androidx.room.Room
 import com.appstudio.finmarka.data.local.AppDatabase
 import com.appstudio.finmarka.data.local.dao.BudgetDao
 import com.appstudio.finmarka.data.local.dao.CategoryDao
+import com.appstudio.finmarka.data.local.dao.ExchangeRateDao
 import com.appstudio.finmarka.data.local.dao.ExpenseSplitDao
 import com.appstudio.finmarka.data.local.dao.FriendDao
+import com.appstudio.finmarka.data.local.dao.TagDao
+import com.appstudio.finmarka.data.local.dao.TodoDao
 import com.appstudio.finmarka.data.local.dao.TransactionDao
+import com.appstudio.finmarka.data.local.dao.WarrantyDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -68,5 +72,29 @@ object DatabaseModule {
     @Singleton
     fun provideExpenseSplitDao(database: AppDatabase): ExpenseSplitDao {
         return database.expenseSplitDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideTagDao(database: AppDatabase): TagDao {
+        return database.tagDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideTodoDao(database: AppDatabase): TodoDao {
+        return database.todoDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideWarrantyDao(database: AppDatabase): WarrantyDao {
+        return database.warrantyDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideExchangeRateDao(database: AppDatabase): ExchangeRateDao {
+        return database.exchangeRateDao()
     }
 }
