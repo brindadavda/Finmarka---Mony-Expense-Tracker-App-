@@ -8,19 +8,17 @@ import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -32,12 +30,31 @@ import com.appstudio.finmarka.ui.components.BottomNavItem
 import com.appstudio.finmarka.ui.components.FinmarkaBottomBar
 import com.appstudio.finmarka.ui.screens.addtransaction.AddEditTransactionScreen
 import com.appstudio.finmarka.ui.screens.budget.BudgetScreen
+import com.appstudio.finmarka.ui.screens.calendar.CalendarViewScreen
+import com.appstudio.finmarka.ui.screens.calculators.CalculatorsScreen
 import com.appstudio.finmarka.ui.screens.dashboard.DashboardScreen
+import com.appstudio.finmarka.ui.screens.exchange.ExchangeRatesScreen
 import com.appstudio.finmarka.ui.screens.lock.LockScreen
+import com.appstudio.finmarka.ui.screens.more.MoreScreen
+import com.appstudio.finmarka.ui.screens.notes.NotesScreen
+import com.appstudio.finmarka.ui.screens.reminders.BillRemindersScreen
 import com.appstudio.finmarka.ui.screens.reports.ReportsScreen
 import com.appstudio.finmarka.ui.screens.settings.SettingsScreen
 import com.appstudio.finmarka.ui.screens.splash.SplashScreen
+import com.appstudio.finmarka.ui.screens.statements.StatementsScreen
+import com.appstudio.finmarka.ui.screens.tags.TagsScreen
+import com.appstudio.finmarka.ui.screens.tasks.TodosScreen
 import com.appstudio.finmarka.ui.screens.transactions.TransactionsScreen
+import com.appstudio.finmarka.ui.screens.warranties.WarrantiesScreen
+import com.appstudio.finmarka.ui.screens.assets.AssetsScreen
+import com.appstudio.finmarka.ui.screens.accounts.AccountsScreen
+import com.appstudio.finmarka.ui.screens.categories.CategoriesScreen
+import com.appstudio.finmarka.ui.screens.loans.LendBorrowScreen
+import com.appstudio.finmarka.ui.screens.loans.LoansScreen
+import com.appstudio.finmarka.ui.screens.merchants.MerchantsScreen
+import com.appstudio.finmarka.ui.screens.savings.SavingsScreen
+import com.appstudio.finmarka.ui.screens.templates.TemplatesScreen
+import com.appstudio.finmarka.ui.screens.backup.BackupRestoreScreen
 import com.appstudio.finmarka.ui.theme.FinmarkaTheme
 import dagger.hilt.android.AndroidEntryPoint
 import java.security.MessageDigest
@@ -104,14 +121,59 @@ class MainActivity : ComponentActivity() {
                             onSaved = { navController.popBackStack() }
                         )
                     }
-                    composable("budget") {
-                        BudgetScreen()
+                    composable("backup_restore") {
+                        BackupRestoreScreen()
+                    }
+                    composable("templates") {
+                        TemplatesScreen()
+                    }
+                    composable("accounts") {
+                        AccountsScreen()
                     }
                     composable("categories") {
-                        Text("Categories management - placeholder")
+                        CategoriesScreen()
                     }
-                    composable("backup_restore") {
-                        Text("Backup & Restore - placeholder")
+                    composable("merchants") {
+                        MerchantsScreen()
+                    }
+                    composable("assets") {
+                        AssetsScreen()
+                    }
+                    composable("savings") {
+                        SavingsScreen()
+                    }
+                    composable("loans") {
+                        LoansScreen()
+                    }
+                    composable("lend_borrow") {
+                        LendBorrowScreen()
+                    }
+                    composable("bill_reminders") {
+                        BillRemindersScreen()
+                    }
+                    composable("notes") {
+                        NotesScreen()
+                    }
+                    composable("todos") {
+                        TodosScreen()
+                    }
+                    composable("warranties") {
+                        WarrantiesScreen()
+                    }
+                    composable("tags") {
+                        TagsScreen()
+                    }
+                    composable("statements") {
+                        StatementsScreen()
+                    }
+                    composable("calendar") {
+                        CalendarViewScreen()
+                    }
+                    composable("exchange_rates") {
+                        ExchangeRatesScreen()
+                    }
+                    composable("calculators") {
+                        CalculatorsScreen()
                     }
                 }
             }
@@ -133,13 +195,13 @@ private fun MainScreen(
     val navControllerInner = rememberNavController()
     val navBackStackEntry by navControllerInner.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
-    val showBottomBar = currentDestination?.route in listOf("dashboard", "transactions", "add", "reports", "settings")
+    val showBottomBar = currentDestination?.route in listOf("home", "transactions", "reports", "settings", "more")
     val bottomBarItems = listOf(
-        BottomNavItem("dashboard", Icons.Default.Home, "Dashboard"),
+        BottomNavItem("home", Icons.Default.Home, "Home"),
         BottomNavItem("transactions", Icons.Default.List, "Transactions"),
-        BottomNavItem("add", Icons.Default.Add, "Add"),
         BottomNavItem("reports", Icons.Default.BarChart, "Reports"),
-        BottomNavItem("settings", Icons.Default.Settings, "Settings")
+        BottomNavItem("settings", Icons.Default.Settings, "Settings"),
+        BottomNavItem("more", Icons.Default.Menu, "More")
     )
 
     Scaffold(
@@ -161,10 +223,10 @@ private fun MainScreen(
     ) { paddingValues ->
         NavHost(
             navController = navControllerInner,
-            startDestination = "dashboard",
+            startDestination = "home",
             modifier = Modifier.padding(paddingValues)
         ) {
-            composable("dashboard") {
+            composable("home") {
                 DashboardScreen(
                     onNavigateToTransactions = { navControllerInner.navigate("transactions") },
                     onNavigateToAddTransaction = { navController.navigate("add_transaction") },
@@ -176,13 +238,14 @@ private fun MainScreen(
                     onTransactionClick = { id -> navController.navigate("edit_transaction/$id") }
                 )
             }
-            composable("add") {
-                AddEditTransactionScreen(
-                    onSaved = { navControllerInner.navigate("dashboard") }
-                )
-            }
             composable("reports") {
                 ReportsScreen()
+            }
+            composable("more") {
+                MoreScreen(
+                    onNavigate = { route -> navController.navigate(route) },
+                    onNavigateInner = { route -> navControllerInner.navigate(route) }
+                )
             }
             composable("settings") {
                 SettingsScreen(
@@ -193,6 +256,63 @@ private fun MainScreen(
                     onNavigateToPrivacyPolicy = { navController.navigate("privacy_policy") },
                     onNavigateToTerms = { navController.navigate("terms") }
                 )
+            }
+            composable("budget") {
+                BudgetScreen()
+            }
+            composable("templates") {
+                TemplatesScreen()
+            }
+            composable("accounts") {
+                AccountsScreen()
+            }
+            composable("categories") {
+                CategoriesScreen()
+            }
+            composable("merchants") {
+                MerchantsScreen()
+            }
+            composable("assets") {
+                AssetsScreen()
+            }
+            composable("savings") {
+                SavingsScreen()
+            }
+            composable("loans") {
+                LoansScreen()
+            }
+            composable("lend_borrow") {
+                LendBorrowScreen()
+            }
+            composable("bill_reminders") {
+                BillRemindersScreen()
+            }
+            composable("notes") {
+                NotesScreen()
+            }
+            composable("todos") {
+                TodosScreen()
+            }
+            composable("warranties") {
+                WarrantiesScreen()
+            }
+            composable("tags") {
+                TagsScreen()
+            }
+            composable("statements") {
+                StatementsScreen()
+            }
+            composable("calendar") {
+                CalendarViewScreen()
+            }
+            composable("exchange_rates") {
+                ExchangeRatesScreen()
+            }
+            composable("calculators") {
+                CalculatorsScreen()
+            }
+            composable("backup_restore") {
+                BackupRestoreScreen()
             }
         }
     }

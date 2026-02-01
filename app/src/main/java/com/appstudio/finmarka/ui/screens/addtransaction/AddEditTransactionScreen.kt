@@ -26,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -37,6 +38,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.appstudio.finmarka.data.model.PaymentMode
+import com.appstudio.finmarka.data.model.TransactionStatus
 import com.appstudio.finmarka.data.model.TransactionType
 import com.appstudio.finmarka.ui.viewmodel.AddEditTransactionViewModel
 import java.util.Calendar
@@ -117,6 +119,22 @@ fun AddEditTransactionScreen(
             singleLine = true
         )
         Spacer(modifier = Modifier.height(12.dp))
+        OutlinedTextField(
+            value = state.accountName,
+            onValueChange = { viewModel.setAccountName(it) },
+            label = { Text("Account") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        OutlinedTextField(
+            value = state.merchantName,
+            onValueChange = { viewModel.setMerchantName(it) },
+            label = { Text("Merchant / Source") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+        Spacer(modifier = Modifier.height(12.dp))
         Text("Type", style = MaterialTheme.typography.labelMedium,  color = MaterialTheme.colorScheme.onPrimaryContainer)
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -156,6 +174,26 @@ fun AddEditTransactionScreen(
             }
         }
         Spacer(modifier = Modifier.height(12.dp))
+        OutlinedTextField(
+            value = state.tags.joinToString(),
+            onValueChange = { input ->
+                val tags = input.split(",").map { it.trim() }.filter { it.isNotBlank() }
+                viewModel.setTags(tags)
+            },
+            label = { Text("Tags (comma separated)") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        OutlinedTextField(
+            value = state.attachments.joinToString(),
+            onValueChange = { input ->
+                val attachments = input.split(",").map { it.trim() }.filter { it.isNotBlank() }
+                viewModel.setAttachments(attachments)
+            },
+            label = { Text("Attachments (URIs)") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(12.dp))
         Text(
             text = "Date & time: ${com.appstudio.finmarka.ui.util.formatDateTimeTravel(state.dateTime)}",
             style = MaterialTheme.typography.bodyMedium,
@@ -168,6 +206,40 @@ fun AddEditTransactionScreen(
             }
             OutlinedButton(onClick = { timePickerDialog.show() }) {
                 Text("Select time")
+            }
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        Text("Status", style = MaterialTheme.typography.labelMedium,  color = MaterialTheme.colorScheme.onPrimaryContainer)
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            TransactionStatus.entries.forEach { status ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(
+                        selected = state.status == status,
+                        onClick = { viewModel.setStatus(status) }
+                    )
+                    Text(status.name.lowercase().replaceFirstChar { it.uppercase() })
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text("Recurring Transaction", style = MaterialTheme.typography.labelMedium)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(if (state.isRecurring) "Enabled" else "Disabled")
+                Switch(
+                    checked = state.isRecurring,
+                    onCheckedChange = { viewModel.toggleRecurring() }
+                )
             }
         }
         Spacer(modifier = Modifier.height(12.dp))

@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appstudio.finmarka.data.local.PreferencesManager
 import com.appstudio.finmarka.data.model.PaymentMode
+import com.appstudio.finmarka.data.model.TransactionStatus
 import com.appstudio.finmarka.data.model.TransactionType
 import com.appstudio.finmarka.data.repository.TransactionRepository
 import com.appstudio.finmarka.data.repository.CategoryRepository
@@ -23,9 +24,15 @@ data class AddEditTransactionUiState(
     val type: TransactionType = TransactionType.EXPENSE,
     val categoryId: Int = 0,
     val categories: List<Category> = emptyList(),
+    val accountName: String = "",
+    val merchantName: String = "",
+    val tags: List<String> = emptyList(),
+    val attachments: List<String> = emptyList(),
     val dateTime: Long = System.currentTimeMillis(),
     val note: String = "",
     val paymentMode: PaymentMode = PaymentMode.CASH,
+    val status: TransactionStatus = TransactionStatus.COMPLETED,
+    val isRecurring: Boolean = false,
     val isEdit: Boolean = false,
     val transactionId: Int = 0,
     val saveSuccess: Boolean = false,
@@ -63,9 +70,14 @@ class AddEditTransactionViewModel @Inject constructor(
                             amount = t.amount.toString(),
                             type = t.type,
                             categoryId = t.categoryId,
+                            accountName = t.accountId?.let { "Account #$it" } ?: "",
+                            merchantName = t.merchantName.orEmpty(),
                             dateTime = t.dateTime,
                             note = t.note ?: "",
-                            paymentMode = t.paymentMode
+                            paymentMode = t.paymentMode,
+                            status = t.status,
+                            isRecurring = t.isRecurring,
+                            attachments = t.attachmentUris?.split(",")?.filter { it.isNotBlank() }.orEmpty()
                         )
                     }
                 }
@@ -91,6 +103,22 @@ class AddEditTransactionViewModel @Inject constructor(
         _uiState.update { it.copy(categoryId = id) }
     }
 
+    fun setAccountName(name: String) {
+        _uiState.update { it.copy(accountName = name) }
+    }
+
+    fun setMerchantName(name: String) {
+        _uiState.update { it.copy(merchantName = name) }
+    }
+
+    fun setTags(tags: List<String>) {
+        _uiState.update { it.copy(tags = tags) }
+    }
+
+    fun setAttachments(attachments: List<String>) {
+        _uiState.update { it.copy(attachments = attachments) }
+    }
+
     fun setDateTime(dateTime: Long) {
         _uiState.update { it.copy(dateTime = dateTime) }
     }
@@ -101,6 +129,14 @@ class AddEditTransactionViewModel @Inject constructor(
 
     fun setPaymentMode(mode: PaymentMode) {
         _uiState.update { it.copy(paymentMode = mode) }
+    }
+
+    fun setStatus(status: TransactionStatus) {
+        _uiState.update { it.copy(status = status) }
+    }
+
+    fun toggleRecurring() {
+        _uiState.update { it.copy(isRecurring = !it.isRecurring) }
     }
 
     fun save() {
@@ -122,6 +158,7 @@ class AddEditTransactionViewModel @Inject constructor(
             }
             val currency =  preferencesManager.currencyCode
             val convertedAmount = amount // TODO: convert to base currency when multi-currency rates available
+            val attachmentUris = state.attachments.joinToString(",").ifBlank { null }
             try {
                 if (state.isEdit) {
                     transactionRepository.updateTransaction(
@@ -133,7 +170,11 @@ class AddEditTransactionViewModel @Inject constructor(
                         categoryId = categoryId,
                         dateTime = state.dateTime,
                         note = state.note.ifBlank { null },
-                        paymentMode = state.paymentMode
+                        paymentMode = state.paymentMode,
+                        merchantName = state.merchantName.ifBlank { null },
+                        status = state.status,
+                        isRecurring = state.isRecurring,
+                        attachmentUris = attachmentUris
                     )
                 } else {
                     transactionRepository.insertTransaction(
@@ -144,7 +185,11 @@ class AddEditTransactionViewModel @Inject constructor(
                         categoryId = categoryId,
                         dateTime = state.dateTime,
                         note = state.note.ifBlank { null },
-                        paymentMode = state.paymentMode
+                        paymentMode = state.paymentMode,
+                        merchantName = state.merchantName.ifBlank { null },
+                        status = state.status,
+                        isRecurring = state.isRecurring,
+                        attachmentUris = attachmentUris
                     )
                 }
                 _uiState.update { it.copy(saveSuccess = true, error = null) }
