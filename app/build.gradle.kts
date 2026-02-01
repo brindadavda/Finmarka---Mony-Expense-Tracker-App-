@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.compile.JavaCompile
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -34,6 +36,12 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    options.compilerArgs.removeAll { arg ->
+        arg.startsWith("-Adagger.") || arg.startsWith("-Ahilt.")
     }
 }
 
