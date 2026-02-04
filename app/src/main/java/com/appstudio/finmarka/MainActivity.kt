@@ -138,7 +138,8 @@ class MainActivity : ComponentActivity() {
                         AccountsListScreen(
                             onNavigateBack = { navController.popBackStack() },
                             onAddAccount = { navController.navigate("add_account") },
-                            onAccountSelected = { id -> navController.navigate("account_detail/$id") }
+                            onAccountSelected = { id -> navController.navigate("account_detail/$id") },
+                            onEditAccount = { id -> navController.navigate("edit_account/$id") }
                         )
                     }
                     composable("add_account") {
@@ -301,7 +302,8 @@ private fun MainScreen(
                 AccountsListScreen(
                     onNavigateBack = { navControllerInner.popBackStack() },
                     onAddAccount = { navControllerInner.navigate("add_account") },
-                    onAccountSelected = { id -> navControllerInner.navigate("account_detail/$id") }
+                    onAccountSelected = { id -> navControllerInner.navigate("account_detail/$id") },
+                    onEditAccount = { id -> navControllerInner.navigate("edit_account/$id") }
                 )
             }
             composable("add_account") {

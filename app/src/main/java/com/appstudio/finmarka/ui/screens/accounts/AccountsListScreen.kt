@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
@@ -51,6 +52,7 @@ fun AccountsListScreen(
     onNavigateBack: () -> Unit,
     onAddAccount: () -> Unit,
     onAccountSelected: (Int) -> Unit,
+    onEditAccount: (Int) -> Unit,
     viewModel: AccountsViewModel = hiltViewModel()
 ) {
     val searchQuery by viewModel.searchQuery.collectAsState()
@@ -114,7 +116,8 @@ fun AccountsListScreen(
                 items(accounts) { account ->
                     AccountRow(
                         account = account,
-                        onClick = { onAccountSelected(account.id) }
+                        onClick = { onAccountSelected(account.id) },
+                        onEdit = { onEditAccount(account.id) }
                     )
                 }
             }
@@ -125,7 +128,8 @@ fun AccountsListScreen(
 @Composable
 private fun AccountRow(
     account: AccountEntity,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onEdit: () -> Unit
 ) {
     val color = account.colorHex.toColor()
     Card(
@@ -168,16 +172,25 @@ private fun AccountRow(
                     )
                 }
             }
-            Surface(
-                color = color.copy(alpha = 0.2f),
-                shape = RoundedCornerShape(50)
-            ) {
-                Text(
-                    text = formatCurrency(account.balance, account.currency),
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                    color = color,
-                    style = MaterialTheme.typography.labelLarge
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Surface(
+                    color = color.copy(alpha = 0.2f),
+                    shape = RoundedCornerShape(50)
+                ) {
+                    Text(
+                        text = formatCurrency(account.balance, account.currency),
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        color = color,
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
+                IconButton(onClick = onEdit) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Edit Account",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }
