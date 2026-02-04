@@ -126,6 +126,25 @@ fun AddEditTransactionScreen(
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
+        if (state.accounts.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Select Account", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
+            state.accounts.forEach { account ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { viewModel.setAccountId(account.id) }
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = state.accountId == account.id,
+                        onClick = { viewModel.setAccountId(account.id) }
+                    )
+                    Text(account.name, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                }
+            }
+        }
         Spacer(modifier = Modifier.height(12.dp))
         OutlinedTextField(
             value = state.merchantName,

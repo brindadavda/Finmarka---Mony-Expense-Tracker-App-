@@ -9,6 +9,8 @@ import com.appstudio.finmarka.data.model.TransactionStatus
 import com.appstudio.finmarka.data.model.TransactionType
 import com.appstudio.finmarka.data.repository.TransactionRepository
 import com.appstudio.finmarka.data.repository.CategoryRepository
+import com.appstudio.finmarka.data.repository.AccountsRepository
+import com.appstudio.finmarka.data.local.entity.AccountEntity
 import com.appstudio.finmarka.domain.model.Category
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +26,7 @@ data class AddEditTransactionUiState(
     val type: TransactionType = TransactionType.EXPENSE,
     val categoryId: Int = 0,
     val categories: List<Category> = emptyList(),
+    val accounts: List<AccountEntity> = emptyList(),
     val accountName: String = "",
     val accountId: Int? = null,
     val merchantName: String = "",
@@ -44,6 +47,7 @@ data class AddEditTransactionUiState(
 class AddEditTransactionViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val categoryRepository: CategoryRepository,
+    private val accountsRepository: AccountsRepository,
     private val preferencesManager: PreferencesManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -60,6 +64,11 @@ class AddEditTransactionViewModel @Inject constructor(
             categoryRepository.ensureDefaultCategories()
             categoryRepository.getCategoriesAsDomain().collect { list ->
                 _uiState.update { it.copy(categories = list) }
+            }
+        }
+        viewModelScope.launch {
+            accountsRepository.getAllAccounts().collect { list ->
+                _uiState.update { it.copy(accounts = list) }
             }
         }
         transactionId?.let { id ->
@@ -90,7 +99,7 @@ class AddEditTransactionViewModel @Inject constructor(
                 it.copy(
                     categoryId = 0,
                     accountId = accountIdArg,
-                    accountName = accountIdArg?.let { id -> "Account #$id" } ?: ""
+                    accountName = ""
                 )
             }
         }
@@ -114,6 +123,10 @@ class AddEditTransactionViewModel @Inject constructor(
 
     fun setAccountName(name: String) {
         _uiState.update { it.copy(accountName = name) }
+    }
+
+    fun setAccountId(id: Int?) {
+        _uiState.update { it.copy(accountId = id) }
     }
 
     fun setMerchantName(name: String) {
