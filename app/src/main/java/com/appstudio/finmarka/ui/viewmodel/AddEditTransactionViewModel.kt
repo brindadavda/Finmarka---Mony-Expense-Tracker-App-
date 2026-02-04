@@ -68,7 +68,15 @@ class AddEditTransactionViewModel @Inject constructor(
         }
         viewModelScope.launch {
             accountsRepository.getAllAccounts().collect { list ->
-                _uiState.update { it.copy(accounts = list) }
+                _uiState.update { current ->
+                    val resolvedName = current.accountId?.let { selectedId ->
+                        list.firstOrNull { it.id == selectedId }?.name.orEmpty()
+                    }.orEmpty()
+                    current.copy(
+                        accounts = list,
+                        accountName = if (resolvedName.isNotBlank()) resolvedName else current.accountName
+                    )
+                }
             }
         }
         transactionId?.let { id ->
@@ -126,7 +134,10 @@ class AddEditTransactionViewModel @Inject constructor(
     }
 
     fun setAccountId(id: Int?) {
-        _uiState.update { it.copy(accountId = id) }
+        val accountName = id?.let { selectedId ->
+            _uiState.value.accounts.firstOrNull { it.id == selectedId }?.name.orEmpty()
+        }.orEmpty()
+        _uiState.update { it.copy(accountId = id, accountName = accountName) }
     }
 
     fun setMerchantName(name: String) {
