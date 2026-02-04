@@ -158,6 +158,11 @@ private fun TransactionRow(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                Text(
+                    text = transaction.status.displayLabel(),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
             Text(
                 text = transaction.displayAmount(currency),
@@ -167,6 +172,10 @@ private fun TransactionRow(
             )
         }
     }
+}
+
+private fun TransactionStatus.displayLabel(): String {
+    return name.lowercase().replaceFirstChar { it.uppercase() }
 }
 
 private fun transactionDelta(transaction: Transaction): Double {
