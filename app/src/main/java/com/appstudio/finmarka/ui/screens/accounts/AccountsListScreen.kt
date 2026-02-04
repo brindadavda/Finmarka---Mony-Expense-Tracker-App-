@@ -36,6 +36,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -59,6 +62,7 @@ fun AccountsListScreen(
     val allAccounts by viewModel.accounts.collectAsState()
     val accounts by viewModel.filteredAccounts.collectAsState()
     val totalBalance = allAccounts.filterNot { it.isCreditCard }.sumOf { it.balance }
+    var showSearch by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -70,7 +74,14 @@ fun AccountsListScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { }) {
+                    IconButton(
+                        onClick = {
+                            showSearch = !showSearch
+                            if (!showSearch) {
+                                viewModel.updateSearchQuery("")
+                            }
+                        }
+                    ) {
                         Icon(Icons.Default.Search, contentDescription = "Search")
                     }
                     IconButton(onClick = { }) {
@@ -102,13 +113,15 @@ fun AccountsListScreen(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Spacer(modifier = Modifier.height(12.dp))
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = viewModel::updateSearchQuery,
-                label = { Text("Search accounts") },
-                modifier = Modifier.fillMaxWidth()
-            )
+            if (showSearch) {
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = viewModel::updateSearchQuery,
+                    label = { Text("Search accounts") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
             Spacer(modifier = Modifier.height(16.dp))
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
