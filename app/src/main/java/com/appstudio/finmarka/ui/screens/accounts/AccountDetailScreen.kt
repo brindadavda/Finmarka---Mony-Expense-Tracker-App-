@@ -28,6 +28,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.background
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -40,6 +41,7 @@ import com.appstudio.finmarka.ui.util.formatCurrency
 import com.appstudio.finmarka.ui.util.formatDateShort
 import com.appstudio.finmarka.ui.viewmodel.AccountDetailViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountDetailScreen(
     accountId: Int,
