@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appstudio.finmarka.data.local.entity.AccountEntity
 import com.appstudio.finmarka.data.repository.AccountsRepository
+import com.appstudio.finmarka.data.repository.TransactionRepository
+import com.appstudio.finmarka.domain.model.Transaction
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -16,13 +18,17 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AccountsViewModel @Inject constructor(
-    private val accountsRepository: AccountsRepository
+    private val accountsRepository: AccountsRepository,
+    private val transactionRepository: TransactionRepository
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery
 
     val accounts: StateFlow<List<AccountEntity>> = accountsRepository.getAllAccounts()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val transactions: StateFlow<List<Transaction>> = transactionRepository.getAllTransactions()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val filteredAccounts: StateFlow<List<AccountEntity>> = combine(accounts, searchQuery) { list, query ->

@@ -46,6 +46,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.appstudio.finmarka.data.local.entity.AccountEntity
+import com.appstudio.finmarka.data.model.TransactionStatus
+import com.appstudio.finmarka.data.model.TransactionType
+import com.appstudio.finmarka.domain.model.Transaction
 import com.appstudio.finmarka.ui.util.formatCurrency
 import com.appstudio.finmarka.ui.viewmodel.AccountsViewModel
 
@@ -61,7 +64,13 @@ fun AccountsListScreen(
     val searchQuery by viewModel.searchQuery.collectAsState()
     val allAccounts by viewModel.accounts.collectAsState()
     val accounts by viewModel.filteredAccounts.collectAsState()
-    val totalBalance = allAccounts.filterNot { it.isCreditCard }.sumOf { it.balance }
+    val transactions by viewModel.transactions.collectAsState()
+    val totalBalance = allAccounts.filterNot { it.isCreditCard }.sumOf { account ->
+        account.balance + calculateDelta(
+            transactions = transactions,
+            accountId = account.id
+        )
+    }
     var showSearch by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
@@ -130,7 +139,11 @@ fun AccountsListScreen(
                     AccountRow(
                         account = account,
                         onClick = { onAccountSelected(account.id) },
-                        onEdit = { onEditAccount(account.id) }
+                        onEdit = { onEditAccount(account.id) },
+                        balanceOverride = account.balance + calculateDelta(
+                            transactions = transactions,
+                            accountId = account.id
+                        )
                     )
                 }
             }
@@ -142,7 +155,8 @@ fun AccountsListScreen(
 private fun AccountRow(
     account: AccountEntity,
     onClick: () -> Unit,
-    onEdit: () -> Unit
+    onEdit: () -> Unit,
+    balanceOverride: Double
 ) {
     val color = account.colorHex.toColor()
     Card(
@@ -191,7 +205,7 @@ private fun AccountRow(
                     shape = RoundedCornerShape(50)
                 ) {
                     Text(
-                        text = formatCurrency(account.balance, account.currency),
+                        text = formatCurrency(balanceOverride, account.currency),
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                         color = color,
                         style = MaterialTheme.typography.labelLarge
@@ -205,6 +219,21 @@ private fun AccountRow(
                     )
                 }
             }
+        }
+    }
+}
+
+private fun calculateDelta(
+    transactions: List<Transaction>,
+    accountId: Int
+): Double {
+    return transactions.filter {
+        it.accountId == accountId && it.status == TransactionStatus.COMPLETED
+    }.sumOf { transaction ->
+        when (transaction.type) {
+            TransactionType.INCOME -> transaction.amount
+            TransactionType.EXPENSE -> -transaction.amount
+            TransactionType.TRANSFER -> 0.0
         }
     }
 }

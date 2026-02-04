@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.appstudio.finmarka.data.model.TransactionStatus
 import com.appstudio.finmarka.data.model.TransactionType
 import com.appstudio.finmarka.domain.model.Transaction
 import com.appstudio.finmarka.ui.util.formatCurrency
@@ -51,7 +52,8 @@ fun AccountDetailScreen(
     val transactions = state.transactions
     val accountCurrency = account?.currency ?: "INR"
     val currentBalance = account?.balance?.let { base ->
-        base + transactions.sumOf { transactionDelta(it) }
+        base + transactions.filter { it.status == TransactionStatus.COMPLETED }
+            .sumOf { transactionDelta(it) }
     } ?: 0.0
 
     Scaffold(
