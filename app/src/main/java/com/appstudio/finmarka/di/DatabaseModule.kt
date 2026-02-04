@@ -8,6 +8,7 @@ import com.appstudio.finmarka.data.local.dao.BudgetDao
 import com.appstudio.finmarka.data.local.dao.CategoryDao
 import com.appstudio.finmarka.data.local.dao.ExchangeRateDao
 import com.appstudio.finmarka.data.local.dao.ExpenseSplitDao
+import com.appstudio.finmarka.data.local.dao.FinanceDao
 import com.appstudio.finmarka.data.local.dao.FriendDao
 import com.appstudio.finmarka.data.local.dao.TagDao
 import com.appstudio.finmarka.data.local.dao.TodoDao
@@ -96,5 +97,11 @@ object DatabaseModule {
     @Singleton
     fun provideExchangeRateDao(database: AppDatabase): ExchangeRateDao {
         return database.exchangeRateDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideFinanceDao(database: AppDatabase): FinanceDao {
+        return database.financeDao()
     }
 }

@@ -47,7 +47,9 @@ import com.appstudio.finmarka.ui.screens.tasks.TodosScreen
 import com.appstudio.finmarka.ui.screens.transactions.TransactionsScreen
 import com.appstudio.finmarka.ui.screens.warranties.WarrantiesScreen
 import com.appstudio.finmarka.ui.screens.assets.AssetsScreen
-import com.appstudio.finmarka.ui.screens.accounts.AccountsScreen
+import com.appstudio.finmarka.ui.screens.accounts.AccountDetailScreen
+import com.appstudio.finmarka.ui.screens.accounts.AccountsListScreen
+import com.appstudio.finmarka.ui.screens.accounts.AddEditAccountScreen
 import com.appstudio.finmarka.ui.screens.categories.CategoriesScreen
 import com.appstudio.finmarka.ui.screens.loans.LendBorrowScreen
 import com.appstudio.finmarka.ui.screens.loans.LoansScreen
@@ -115,6 +117,11 @@ class MainActivity : ComponentActivity() {
                             onSaved = { navController.popBackStack() }
                         )
                     }
+                    composable("add_transaction?accountId={accountId}") {
+                        AddEditTransactionScreen(
+                            onSaved = { navController.popBackStack() }
+                        )
+                    }
                     composable("edit_transaction/{transactionId}") { backStackEntry ->
                         val id = backStackEntry.arguments?.getString("transactionId")?.toIntOrNull() ?: 0
                         AddEditTransactionScreen(
@@ -128,7 +135,34 @@ class MainActivity : ComponentActivity() {
                         TemplatesScreen()
                     }
                     composable("accounts") {
-                        AccountsScreen()
+                        AccountsListScreen(
+                            onNavigateBack = { navController.popBackStack() },
+                            onAddAccount = { navController.navigate("add_account") },
+                            onAccountSelected = { id -> navController.navigate("account_detail/$id") }
+                        )
+                    }
+                    composable("add_account") {
+                        AddEditAccountScreen(
+                            accountId = null,
+                            onNavigateBack = { navController.popBackStack() },
+                            onSave = { navController.popBackStack() }
+                        )
+                    }
+                    composable("edit_account/{accountId}") { backStackEntry ->
+                        val id = backStackEntry.arguments?.getString("accountId")?.toIntOrNull()
+                        AddEditAccountScreen(
+                            accountId = id,
+                            onNavigateBack = { navController.popBackStack() },
+                            onSave = { navController.popBackStack() }
+                        )
+                    }
+                    composable("account_detail/{accountId}") { backStackEntry ->
+                        val id = backStackEntry.arguments?.getString("accountId")?.toIntOrNull() ?: 0
+                        AccountDetailScreen(
+                            accountId = id,
+                            onNavigateBack = { navController.popBackStack() },
+                            onQuickAction = { accountId -> navController.navigate("add_transaction?accountId=$accountId") }
+                        )
                     }
                     composable("categories") {
                         CategoriesScreen()
@@ -264,7 +298,34 @@ private fun MainScreen(
                 TemplatesScreen()
             }
             composable("accounts") {
-                AccountsScreen()
+                AccountsListScreen(
+                    onNavigateBack = { navControllerInner.popBackStack() },
+                    onAddAccount = { navControllerInner.navigate("add_account") },
+                    onAccountSelected = { id -> navControllerInner.navigate("account_detail/$id") }
+                )
+            }
+            composable("add_account") {
+                AddEditAccountScreen(
+                    accountId = null,
+                    onNavigateBack = { navControllerInner.popBackStack() },
+                    onSave = { navControllerInner.popBackStack() }
+                )
+            }
+            composable("edit_account/{accountId}") { backStackEntry ->
+                val id = backStackEntry.arguments?.getString("accountId")?.toIntOrNull()
+                AddEditAccountScreen(
+                    accountId = id,
+                    onNavigateBack = { navControllerInner.popBackStack() },
+                    onSave = { navControllerInner.popBackStack() }
+                )
+            }
+            composable("account_detail/{accountId}") { backStackEntry ->
+                val id = backStackEntry.arguments?.getString("accountId")?.toIntOrNull() ?: 0
+                AccountDetailScreen(
+                    accountId = id,
+                    onNavigateBack = { navControllerInner.popBackStack() },
+                    onQuickAction = { accountId -> navController.navigate("add_transaction?accountId=$accountId") }
+                )
             }
             composable("categories") {
                 CategoriesScreen()

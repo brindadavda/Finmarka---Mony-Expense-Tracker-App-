@@ -25,6 +25,7 @@ data class AddEditTransactionUiState(
     val categoryId: Int = 0,
     val categories: List<Category> = emptyList(),
     val accountName: String = "",
+    val accountId: Int? = null,
     val merchantName: String = "",
     val tags: List<String> = emptyList(),
     val attachments: List<String> = emptyList(),
@@ -48,6 +49,7 @@ class AddEditTransactionViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val transactionId: Int? = savedStateHandle.get<String>("transactionId")?.toIntOrNull()
+    private val accountIdArg: Int? = savedStateHandle.get<String>("accountId")?.toIntOrNull()
 
     private val _uiState = MutableStateFlow(AddEditTransactionUiState())
     val uiState: StateFlow<AddEditTransactionUiState> = _uiState.asStateFlow()
@@ -71,6 +73,7 @@ class AddEditTransactionViewModel @Inject constructor(
                             type = t.type,
                             categoryId = t.categoryId,
                             accountName = t.accountId?.let { "Account #$it" } ?: "",
+                            accountId = t.accountId,
                             merchantName = t.merchantName.orEmpty(),
                             dateTime = t.dateTime,
                             note = t.note ?: "",
@@ -83,7 +86,13 @@ class AddEditTransactionViewModel @Inject constructor(
                 }
             }
         } ?: run {
-            _uiState.update { it.copy(categoryId = 0) }
+            _uiState.update {
+                it.copy(
+                    categoryId = 0,
+                    accountId = accountIdArg,
+                    accountName = accountIdArg?.let { id -> "Account #$id" } ?: ""
+                )
+            }
         }
     }
 
@@ -171,6 +180,7 @@ class AddEditTransactionViewModel @Inject constructor(
                         dateTime = state.dateTime,
                         note = state.note.ifBlank { null },
                         paymentMode = state.paymentMode,
+                        accountId = state.accountId,
                         merchantName = state.merchantName.ifBlank { null },
                         status = state.status,
                         isRecurring = state.isRecurring,
@@ -186,6 +196,7 @@ class AddEditTransactionViewModel @Inject constructor(
                         dateTime = state.dateTime,
                         note = state.note.ifBlank { null },
                         paymentMode = state.paymentMode,
+                        accountId = state.accountId,
                         merchantName = state.merchantName.ifBlank { null },
                         status = state.status,
                         isRecurring = state.isRecurring,
