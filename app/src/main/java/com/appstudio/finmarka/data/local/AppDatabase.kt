@@ -6,11 +6,13 @@ import com.appstudio.finmarka.data.local.dao.BudgetDao
 import com.appstudio.finmarka.data.local.dao.CategoryDao
 import com.appstudio.finmarka.data.local.dao.ExchangeRateDao
 import com.appstudio.finmarka.data.local.dao.ExpenseSplitDao
+import com.appstudio.finmarka.data.local.dao.FinanceDao
 import com.appstudio.finmarka.data.local.dao.FriendDao
 import com.appstudio.finmarka.data.local.dao.TagDao
 import com.appstudio.finmarka.data.local.dao.TodoDao
 import com.appstudio.finmarka.data.local.dao.TransactionDao
 import com.appstudio.finmarka.data.local.dao.WarrantyDao
+import com.appstudio.finmarka.data.local.entity.AccountEntity
 import com.appstudio.finmarka.data.local.entity.BudgetEntity
 import com.appstudio.finmarka.data.local.entity.CategoryEntity
 import com.appstudio.finmarka.data.local.entity.ExchangeRateEntity
@@ -33,9 +35,10 @@ import com.appstudio.finmarka.data.local.entity.WarrantyEntity
         TransactionTagCrossRef::class,
         TodoEntity::class,
         WarrantyEntity::class,
-        ExchangeRateEntity::class
+        ExchangeRateEntity::class,
+        AccountEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -48,4 +51,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun todoDao(): TodoDao
     abstract fun warrantyDao(): WarrantyDao
     abstract fun exchangeRateDao(): ExchangeRateDao
+    abstract fun financeDao(): FinanceDao
 }

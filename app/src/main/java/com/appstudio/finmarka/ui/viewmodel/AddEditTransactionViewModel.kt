@@ -9,6 +9,8 @@ import com.appstudio.finmarka.data.model.TransactionStatus
 import com.appstudio.finmarka.data.model.TransactionType
 import com.appstudio.finmarka.data.repository.TransactionRepository
 import com.appstudio.finmarka.data.repository.CategoryRepository
+import com.appstudio.finmarka.data.repository.AccountsRepository
+import com.appstudio.finmarka.data.local.entity.AccountEntity
 import com.appstudio.finmarka.domain.model.Category
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,7 +26,9 @@ data class AddEditTransactionUiState(
     val type: TransactionType = TransactionType.EXPENSE,
     val categoryId: Int = 0,
     val categories: List<Category> = emptyList(),
+    val accounts: List<AccountEntity> = emptyList(),
     val accountName: String = "",
+    val accountId: Int? = null,
     val merchantName: String = "",
     val tags: List<String> = emptyList(),
     val attachments: List<String> = emptyList(),
@@ -43,11 +47,13 @@ data class AddEditTransactionUiState(
 class AddEditTransactionViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val categoryRepository: CategoryRepository,
+    private val accountsRepository: AccountsRepository,
     private val preferencesManager: PreferencesManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val transactionId: Int? = savedStateHandle.get<String>("transactionId")?.toIntOrNull()
+    private val accountIdArg: Int? = savedStateHandle.get<String>("accountId")?.toIntOrNull()
 
     private val _uiState = MutableStateFlow(AddEditTransactionUiState())
     val uiState: StateFlow<AddEditTransactionUiState> = _uiState.asStateFlow()
@@ -58,6 +64,19 @@ class AddEditTransactionViewModel @Inject constructor(
             categoryRepository.ensureDefaultCategories()
             categoryRepository.getCategoriesAsDomain().collect { list ->
                 _uiState.update { it.copy(categories = list) }
+            }
+        }
+        viewModelScope.launch {
+            accountsRepository.getAllAccounts().collect { list ->
+                _uiState.update { current ->
+                    val resolvedName = current.accountId?.let { selectedId ->
+                        list.firstOrNull { it.id == selectedId }?.name.orEmpty()
+                    }.orEmpty()
+                    current.copy(
+                        accounts = list,
+                        accountName = if (resolvedName.isNotBlank()) resolvedName else current.accountName
+                    )
+                }
             }
         }
         transactionId?.let { id ->
@@ -71,6 +90,7 @@ class AddEditTransactionViewModel @Inject constructor(
                             type = t.type,
                             categoryId = t.categoryId,
                             accountName = t.accountId?.let { "Account #$it" } ?: "",
+                            accountId = t.accountId,
                             merchantName = t.merchantName.orEmpty(),
                             dateTime = t.dateTime,
                             note = t.note ?: "",
@@ -83,7 +103,13 @@ class AddEditTransactionViewModel @Inject constructor(
                 }
             }
         } ?: run {
-            _uiState.update { it.copy(categoryId = 0) }
+            _uiState.update {
+                it.copy(
+                    categoryId = 0,
+                    accountId = accountIdArg,
+                    accountName = ""
+                )
+            }
         }
     }
 
@@ -105,6 +131,13 @@ class AddEditTransactionViewModel @Inject constructor(
 
     fun setAccountName(name: String) {
         _uiState.update { it.copy(accountName = name) }
+    }
+
+    fun setAccountId(id: Int?) {
+        val accountName = id?.let { selectedId ->
+            _uiState.value.accounts.firstOrNull { it.id == selectedId }?.name.orEmpty()
+        }.orEmpty()
+        _uiState.update { it.copy(accountId = id, accountName = accountName) }
     }
 
     fun setMerchantName(name: String) {
@@ -171,6 +204,7 @@ class AddEditTransactionViewModel @Inject constructor(
                         dateTime = state.dateTime,
                         note = state.note.ifBlank { null },
                         paymentMode = state.paymentMode,
+                        accountId = state.accountId,
                         merchantName = state.merchantName.ifBlank { null },
                         status = state.status,
                         isRecurring = state.isRecurring,
@@ -186,6 +220,7 @@ class AddEditTransactionViewModel @Inject constructor(
                         dateTime = state.dateTime,
                         note = state.note.ifBlank { null },
                         paymentMode = state.paymentMode,
+                        accountId = state.accountId,
                         merchantName = state.merchantName.ifBlank { null },
                         status = state.status,
                         isRecurring = state.isRecurring,

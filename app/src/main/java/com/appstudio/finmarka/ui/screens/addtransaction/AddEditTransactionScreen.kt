@@ -19,25 +19,27 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.appstudio.finmarka.data.model.PaymentMode
 import com.appstudio.finmarka.data.model.TransactionStatus
 import com.appstudio.finmarka.data.model.TransactionType
 import com.appstudio.finmarka.ui.viewmodel.AddEditTransactionViewModel
@@ -47,6 +49,7 @@ import java.util.Calendar
 @Composable
 fun AddEditTransactionScreen(
     onSaved: () -> Unit,
+    onAddAccount: () -> Unit,
     viewModel: AddEditTransactionViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -119,13 +122,45 @@ fun AddEditTransactionScreen(
             singleLine = true
         )
         Spacer(modifier = Modifier.height(12.dp))
-        OutlinedTextField(
-            value = state.accountName,
-            onValueChange = { viewModel.setAccountName(it) },
-            label = { Text("Account") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
+        val selectedAccountName = state.accounts.firstOrNull { it.id == state.accountId }?.name
+            ?: state.accountName
+        var accountExpanded by remember { mutableStateOf(false) }
+        ExposedDropdownMenuBox(
+            expanded = accountExpanded,
+            onExpandedChange = { accountExpanded = !accountExpanded }
+        ) {
+            OutlinedTextField(
+                value = if (selectedAccountName.isBlank()) "Select account" else selectedAccountName,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Account") },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = accountExpanded) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor()
+            )
+            ExposedDropdownMenu(
+                expanded = accountExpanded,
+                onDismissRequest = { accountExpanded = false }
+            ) {
+                state.accounts.forEach { account ->
+                    DropdownMenuItem(
+                        text = { Text(account.name) },
+                        onClick = {
+                            viewModel.setAccountId(account.id)
+                            accountExpanded = false
+                        }
+                    )
+                }
+                DropdownMenuItem(
+                    text = { Text("Add account") },
+                    onClick = {
+                        accountExpanded = false
+                        onAddAccount()
+                    }
+                )
+            }
+        }
         Spacer(modifier = Modifier.height(12.dp))
         OutlinedTextField(
             value = state.merchantName,
@@ -240,32 +275,6 @@ fun AddEditTransactionScreen(
                     checked = state.isRecurring,
                     onCheckedChange = { viewModel.toggleRecurring() }
                 )
-            }
-        }
-        Spacer(modifier = Modifier.height(12.dp))
-        Text("Payment mode", style = MaterialTheme.typography.labelMedium,  color = MaterialTheme.colorScheme.onPrimaryContainer)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            PaymentMode.entries.forEach { mode ->
-                Card(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { viewModel.setPaymentMode(mode) },
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (state.paymentMode == mode)
-                            MaterialTheme.colorScheme.primaryContainer
-                        else
-                            MaterialTheme.colorScheme.surfaceVariant
-                    )
-                ) {
-                    Text(
-                        text = mode.displayName,
-                        modifier = Modifier.padding(12.dp),
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                }
             }
         }
         Spacer(modifier = Modifier.height(12.dp))
