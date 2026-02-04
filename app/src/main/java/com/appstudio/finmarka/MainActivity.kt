@@ -165,7 +165,7 @@ class MainActivity : ComponentActivity() {
                         AccountDetailScreen(
                             accountId = id,
                             onNavigateBack = { navController.popBackStack() },
-                            onQuickAction = { accountId -> navController.navigate("add_transaction?accountId=$accountId") }
+                            onAddTransaction = { accountId -> navController.navigate("add_transaction?accountId=$accountId") }
                         )
                     }
                     composable("categories") {
@@ -329,7 +329,7 @@ private fun MainScreen(
                 AccountDetailScreen(
                     accountId = id,
                     onNavigateBack = { navControllerInner.popBackStack() },
-                    onQuickAction = { accountId -> navController.navigate("add_transaction?accountId=$accountId") }
+                    onAddTransaction = { accountId -> navController.navigate("add_transaction?accountId=$accountId") }
                 )
             }
             composable("categories") {
