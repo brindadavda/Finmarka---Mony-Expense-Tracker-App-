@@ -36,7 +36,8 @@ import com.appstudio.finmarka.ui.screens.dashboard.DashboardScreen
 import com.appstudio.finmarka.ui.screens.exchange.ExchangeRatesScreen
 import com.appstudio.finmarka.ui.screens.lock.LockScreen
 import com.appstudio.finmarka.ui.screens.more.MoreScreen
-import com.appstudio.finmarka.ui.screens.notes.NotesScreen
+import com.appstudio.finmarka.ui.screens.notes.AddEditNoteScreen
+import com.appstudio.finmarka.ui.screens.notes.NotesListScreen
 import com.appstudio.finmarka.ui.screens.reminders.BillRemindersScreen
 import com.appstudio.finmarka.ui.screens.reports.ReportsScreen
 import com.appstudio.finmarka.ui.screens.settings.SettingsScreen
@@ -190,7 +191,23 @@ class MainActivity : ComponentActivity() {
                         BillRemindersScreen()
                     }
                     composable("notes") {
-                        NotesScreen()
+                        NotesListScreen(
+                            onAddNote = { navController.navigate("notes_add") },
+                            onEditNote = { id -> navController.navigate("notes_edit/$id") }
+                        )
+                    }
+                    composable("notes_add") {
+                        AddEditNoteScreen(
+                            noteId = null,
+                            onNavigateBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable("notes_edit/{noteId}") { backStackEntry ->
+                        val id = backStackEntry.arguments?.getString("noteId")?.toIntOrNull()
+                        AddEditNoteScreen(
+                            noteId = id,
+                            onNavigateBack = { navController.popBackStack() }
+                        )
                     }
                     composable("todos") {
                         TodosScreen()
@@ -354,7 +371,23 @@ private fun MainScreen(
                 BillRemindersScreen()
             }
             composable("notes") {
-                NotesScreen()
+                NotesListScreen(
+                    onAddNote = { navControllerInner.navigate("notes_add") },
+                    onEditNote = { id -> navControllerInner.navigate("notes_edit/$id") }
+                )
+            }
+            composable("notes_add") {
+                AddEditNoteScreen(
+                    noteId = null,
+                    onNavigateBack = { navControllerInner.popBackStack() }
+                )
+            }
+            composable("notes_edit/{noteId}") { backStackEntry ->
+                val id = backStackEntry.arguments?.getString("noteId")?.toIntOrNull()
+                AddEditNoteScreen(
+                    noteId = id,
+                    onNavigateBack = { navControllerInner.popBackStack() }
+                )
             }
             composable("todos") {
                 TodosScreen()
