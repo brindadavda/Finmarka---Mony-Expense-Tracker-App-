@@ -2,7 +2,6 @@ package com.appstudio.finmarka.ui.screens.notes
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.lazy.animateItemPlacement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -108,7 +107,7 @@ fun NotesListScreen(
                                 note = note,
                                 onClick = { onEditNote(note.id) },
                                 onTogglePin = { viewModel.togglePin(note.id) },
-                                modifier = Modifier.animateItemPlacement()
+                                modifier = Modifier
                             )
                         }
                     }
