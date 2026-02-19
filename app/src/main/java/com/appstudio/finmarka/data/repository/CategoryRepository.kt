@@ -39,26 +39,30 @@ class CategoryRepository @Inject constructor(
 
     suspend fun ensureDefaultCategories() {
         val existing = categoryDao.getAllCategories().first()
-        if (existing.isEmpty()) {
-            DefaultCategories.getDefaultCategories().forEach { cat ->
+        val existingKeys = existing.map { "${it.type}::${it.name.lowercase()}" }.toSet()
+        DefaultCategories.getDefaultCategories().forEach { cat ->
+            val key = "${cat.type}::${cat.name.lowercase()}"
+            if (!existingKeys.contains(key)) {
                 categoryDao.insert(cat)
             }
         }
     }
 
     suspend fun getCategoriesOnce(): List<CategoryEntity> {
-        val existing = categoryDao.getAllCategories().first()
-        if (existing.isEmpty()) {
-            DefaultCategories.getDefaultCategories().forEach { cat ->
-                categoryDao.insert(cat)
-            }
-            return categoryDao.getAllCategories().first()
-        }
-        return existing
+        ensureDefaultCategories()
+        return categoryDao.getAllCategories().first()
     }
 
     suspend fun addCategory(name: String, type: TransactionType, icon: String = "", color: String = "#6200EE"): Long {
-        return categoryDao.insert(CategoryEntity(name = name, type = type.name, icon = icon, color = color))
+        return categoryDao.insert(
+            CategoryEntity(
+                name = name,
+                type = type.name,
+                icon = icon,
+                color = color,
+                isSystem = false
+            )
+        )
     }
 
     suspend fun updateCategory(id: Int, name: String, type: TransactionType, icon: String? = null, color: String? = null) {
@@ -72,6 +76,9 @@ class CategoryRepository @Inject constructor(
     }
 
     suspend fun deleteCategory(id: Int, reassignToCategoryId: Int?) {
+        val category = categoryDao.getCategoryById(id) ?: return
+        if (category.isSystem) return
+
         if (reassignToCategoryId != null) {
             // Reassignment would require updating transactions - for MVP we just delete
             // and leave orphan categoryId (or add foreign key with cascade). Simplified: just delete.
@@ -85,7 +92,8 @@ class CategoryRepository @Inject constructor(
             name = name,
             type = TransactionType.valueOf(type),
             icon = icon,
-            color = color
+            color = color,
+            isSystem = isSystem
         )
     }
 }
