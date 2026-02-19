@@ -1,6 +1,12 @@
 package com.appstudio.finmarka.ui.screens.calendar
 
+import android.Manifest
 import android.app.DatePickerDialog
+import android.app.TimePickerDialog
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,6 +33,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import com.appstudio.finmarka.notifications.ReminderScheduler
 import com.appstudio.finmarka.ui.screens.common.ModuleScaffold
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -33,9 +42,10 @@ import java.util.Locale
 
 private data class CalendarEvent(
     val id: Int,
-    val date: String,
+    val dateTime: Long,
     val title: String,
-    val type: String
+    val type: String,
+    val reminderEnabled: Boolean
 )
 
 @Composable
@@ -43,15 +53,31 @@ fun CalendarViewScreen() {
     val context = LocalContext.current
     val calendar = remember { Calendar.getInstance() }
     val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
+    val timeFormatter = remember { SimpleDateFormat("hh:mm a", Locale.getDefault()) }
+    val dateTimeFormatter = remember { SimpleDateFormat("dd MMM yyyy hh:mm a", Locale.getDefault()) }
 
     var selectedDate by rememberSaveable { mutableStateOf(dateFormatter.format(calendar.time)) }
+    var selectedTime by rememberSaveable { mutableStateOf(timeFormatter.format(calendar.time)) }
     var title by rememberSaveable { mutableStateOf("") }
     var type by rememberSaveable { mutableStateOf("Note") }
+    var setReminder by rememberSaveable { mutableStateOf(true) }
+    var statusMessage by rememberSaveable { mutableStateOf<String?>(null) }
+
     val events = remember {
         mutableStateListOf(
-            CalendarEvent(1, selectedDate, "Loan EMI", "Loan"),
-            CalendarEvent(2, selectedDate, "Mom Birthday", "Birthday")
+            CalendarEvent(1, calendar.timeInMillis, "Loan EMI", "Loan", true),
+            CalendarEvent(2, calendar.timeInMillis, "Mom Birthday", "Birthday", false)
         )
+    }
+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        statusMessage = if (granted) {
+            "Notification permission granted."
+        } else {
+            "Notification permission denied. Reminders may not appear."
+        }
     }
 
     val datePicker = remember {
@@ -69,10 +95,43 @@ fun CalendarViewScreen() {
         )
     }
 
+    val timePicker = remember {
+        TimePickerDialog(
+            context,
+            { _, hour, minute ->
+                calendar.set(Calendar.HOUR_OF_DAY, hour)
+                calendar.set(Calendar.MINUTE, minute)
+                calendar.set(Calendar.SECOND, 0)
+                calendar.set(Calendar.MILLISECOND, 0)
+                selectedTime = timeFormatter.format(calendar.time)
+            },
+            calendar.get(Calendar.HOUR_OF_DAY),
+            calendar.get(Calendar.MINUTE),
+            false
+        )
+    }
+
     ModuleScaffold(
         title = "Calendar",
-        subtitle = "Add notes, birthdays, loan dates, and reminders"
+        subtitle = "Add notes, birthdays, loan dates, and set reminders"
     ) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val hasPermission = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+
+            if (!hasPermission) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    Button(onClick = {
+                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }) {
+                        Text("Enable notifications")
+                    }
+                }
+            }
+        }
+
         OutlinedTextField(
             value = selectedDate,
             onValueChange = {},
@@ -81,9 +140,20 @@ fun CalendarViewScreen() {
             label = { Text("Selected date") }
         )
 
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+        OutlinedTextField(
+            value = selectedTime,
+            onValueChange = {},
+            modifier = Modifier.fillMaxWidth(),
+            readOnly = true,
+            label = { Text("Selected time") }
+        )
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = { datePicker.show() }) {
                 Text("Pick date")
+            }
+            Button(onClick = { timePicker.show() }) {
+                Text("Pick time")
             }
         }
 
@@ -103,28 +173,58 @@ fun CalendarViewScreen() {
             singleLine = true
         )
 
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Set reminder")
+            Switch(checked = setReminder, onCheckedChange = { setReminder = it })
+        }
+
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
             Button(onClick = {
-                if (title.isNotBlank()) {
-                    events.add(
-                        CalendarEvent(
-                            id = (events.maxOfOrNull { it.id } ?: 0) + 1,
-                            date = selectedDate,
-                            title = title.trim(),
-                            type = type.trim().ifBlank { "Note" }
-                        )
-                    )
-                    title = ""
-                    type = "Note"
+                if (title.isBlank()) {
+                    statusMessage = "Please enter event title."
+                    return@Button
                 }
+
+                val event = CalendarEvent(
+                    id = (events.maxOfOrNull { it.id } ?: 0) + 1,
+                    dateTime = calendar.timeInMillis,
+                    title = title.trim(),
+                    type = type.trim().ifBlank { "Note" },
+                    reminderEnabled = setReminder
+                )
+                events.add(event)
+
+                if (setReminder) {
+                    ReminderScheduler.scheduleReminder(
+                        context = context,
+                        triggerAtMillis = event.dateTime,
+                        title = "${event.type} Reminder",
+                        body = event.title,
+                        requestCode = event.id
+                    )
+                    statusMessage = "Reminder scheduled for ${dateTimeFormatter.format(calendar.time)}"
+                } else {
+                    statusMessage = "Event added without reminder."
+                }
+
+                title = ""
+                type = "Note"
             }) {
                 Text("Add to calendar")
             }
         }
 
+        statusMessage?.let {
+            Text(text = it, color = MaterialTheme.colorScheme.primary)
+        }
+
         Text("Upcoming Entries", style = MaterialTheme.typography.titleMedium)
 
-        events.sortedBy { it.date }.forEach { event ->
+        events.sortedBy { it.dateTime }.forEach { event ->
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -136,7 +236,9 @@ fun CalendarViewScreen() {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("${event.date} · ${event.type} · ${event.title}")
+                    val whenText = dateTimeFormatter.format(java.util.Date(event.dateTime))
+                    val reminderLabel = if (event.reminderEnabled) "Reminder ON" else "Reminder OFF"
+                    Text("$whenText · ${event.type} · ${event.title} · $reminderLabel")
                     IconButton(onClick = { events.remove(event) }) {
                         Icon(Icons.Default.Delete, contentDescription = "Delete calendar entry")
                     }

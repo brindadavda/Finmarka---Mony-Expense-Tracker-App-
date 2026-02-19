@@ -25,9 +25,14 @@ import kotlin.math.pow
 
 @Composable
 fun CalculatorsScreen() {
+    var numberA by rememberSaveable { mutableStateOf("") }
+    var numberB by rememberSaveable { mutableStateOf("") }
+    var operator by rememberSaveable { mutableStateOf("+") }
+
     var principal by rememberSaveable { mutableStateOf("") }
     var annualRate by rememberSaveable { mutableStateOf("") }
-    var tenureYears by rememberSaveable { mutableStateOf("") }
+    var tenureValue by rememberSaveable { mutableStateOf("") }
+    var tenureUnit by rememberSaveable { mutableStateOf("Years") }
 
     var savingsMonthly by rememberSaveable { mutableStateOf("") }
     var savingsRate by rememberSaveable { mutableStateOf("") }
@@ -37,16 +42,31 @@ fun CalculatorsScreen() {
     var loanRate by rememberSaveable { mutableStateOf("") }
     var loanMonthlyPayment by rememberSaveable { mutableStateOf("") }
 
-    val emiResult = remember(principal, annualRate, tenureYears) {
+    val normalResult = remember(numberA, numberB, operator) {
+        val a = numberA.toDoubleOrNull() ?: return@remember "-"
+        val b = numberB.toDoubleOrNull() ?: return@remember "-"
+        when (operator) {
+            "+" -> "%.2f".format(a + b)
+            "-" -> "%.2f".format(a - b)
+            "×" -> "%.2f".format(a * b)
+            "÷" -> if (b == 0.0) "Cannot divide by zero" else "%.2f".format(a / b)
+            else -> "-"
+        }
+    }
+
+    val emiResult = remember(principal, annualRate, tenureValue, tenureUnit) {
         val p = principal.toDoubleOrNull() ?: return@remember "-"
         val r = (annualRate.toDoubleOrNull() ?: return@remember "-") / 12 / 100
-        val n = (tenureYears.toDoubleOrNull() ?: return@remember "-") * 12
-        if (p <= 0 || n <= 0) return@remember "-"
+        val tenureMonths = when (tenureUnit) {
+            "Months" -> tenureValue.toDoubleOrNull() ?: return@remember "-"
+            else -> (tenureValue.toDoubleOrNull() ?: return@remember "-") * 12
+        }
+        if (p <= 0 || tenureMonths <= 0) return@remember "-"
 
         val emi = if (r == 0.0) {
-            p / n
+            p / tenureMonths
         } else {
-            p * r * (1 + r).pow(n) / ((1 + r).pow(n) - 1)
+            p * r * (1 + r).pow(tenureMonths) / ((1 + r).pow(tenureMonths) - 1)
         }
         "%.2f".format(emi)
     }
@@ -83,12 +103,27 @@ fun CalculatorsScreen() {
 
     ModuleScaffold(
         title = "Calculators",
-        subtitle = "EMI, savings growth, and loan payoff calculators"
+        subtitle = "Normal, EMI, savings, and loan calculators"
     ) {
+        Text("Normal Calculator", style = MaterialTheme.typography.titleMedium)
+        OutlinedTextField(value = numberA, onValueChange = { numberA = it }, label = { Text("Number A") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+        OutlinedTextField(value = numberB, onValueChange = { numberB = it }, label = { Text("Number B") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf("+", "-", "×", "÷").forEach { op ->
+                Button(onClick = { operator = op }) { Text(op) }
+            }
+        }
+        ResultCard(label = "Result", value = normalResult)
+
         Text("EMI Calculator", style = MaterialTheme.typography.titleMedium)
         OutlinedTextField(value = principal, onValueChange = { principal = it }, label = { Text("Loan amount") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
         OutlinedTextField(value = annualRate, onValueChange = { annualRate = it }, label = { Text("Annual interest %") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-        OutlinedTextField(value = tenureYears, onValueChange = { tenureYears = it }, label = { Text("Tenure (years)") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+        OutlinedTextField(value = tenureValue, onValueChange = { tenureValue = it }, label = { Text("Tenure value") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(onClick = { tenureUnit = "Years" }) { Text("Years") }
+            Button(onClick = { tenureUnit = "Months" }) { Text("Months") }
+            Text("Selected: $tenureUnit", modifier = Modifier.padding(top = 12.dp))
+        }
         ResultCard(label = "Estimated Monthly EMI", value = emiResult)
 
         Text("Savings Calculator", style = MaterialTheme.typography.titleMedium)
@@ -111,9 +146,13 @@ fun CalculatorsScreen() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Button(onClick = {
+                numberA = ""
+                numberB = ""
+                operator = "+"
                 principal = ""
                 annualRate = ""
-                tenureYears = ""
+                tenureValue = ""
+                tenureUnit = "Years"
                 savingsMonthly = ""
                 savingsRate = ""
                 savingsYears = ""
