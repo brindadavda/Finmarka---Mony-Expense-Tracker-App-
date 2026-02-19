@@ -7,5 +7,6 @@ data class Category(
     val name: String,
     val type: TransactionType,
     val icon: String = "",
-    val color: String = "#6200EE"
+    val color: String = "#6200EE",
+    val isSystem: Boolean = false
 )

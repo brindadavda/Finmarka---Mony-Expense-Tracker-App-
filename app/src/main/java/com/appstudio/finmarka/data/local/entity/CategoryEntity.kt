@@ -9,5 +9,6 @@ data class CategoryEntity(
     val name: String,
     val type: String, // INCOME / EXPENSE
     val icon: String = "",
-    val color: String = "#6200EE"
+    val color: String = "#6200EE",
+    val isSystem: Boolean = false
 )

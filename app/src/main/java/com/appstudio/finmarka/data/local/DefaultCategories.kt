@@ -4,45 +4,92 @@ import com.appstudio.finmarka.data.local.entity.CategoryEntity
 import com.appstudio.finmarka.data.model.TransactionType
 
 object DefaultCategories {
-    // Expense: Food, Transport, Shopping, Bills, Entertainment, Health, Others
-    private val expenseCategories = listOf(
-        Triple("Food", "restaurant", "#4CAF50"),
-        Triple("Transport", "directions_car", "#2196F3"),
-        Triple("Shopping", "shopping_cart", "#FF9800"),
-        Triple("Bills", "receipt_long", "#607D8B"),
-        Triple("Entertainment", "movie", "#E91E63"),
-        Triple("Health", "local_hospital", "#F44336"),
-        Triple("Others", "category", "#795548")
-    )
-    // Income: Salary, Business, Others
+
     private val incomeCategories = listOf(
-        Triple("Salary", "payments", "#4CAF50"),
-        Triple("Business", "business_center", "#2196F3"),
-        Triple("Others", "savings", "#9C27B0")
+        "💼" to "Salary / Wages",
+        "🧑‍💻" to "Freelance / Consulting",
+        "🏢" to "Business Income",
+        "📈" to "Investments (Dividends / Interest)",
+        "🏠" to "Rental Income",
+        "💵" to "Bonuses",
+        "🎁" to "Gifts Received",
+        "🧾" to "Tax Refund",
+        "🏦" to "Cashback / Rewards",
+        "🔄" to "Other Income"
+    )
+
+    private val expenseCategories = listOf(
+        "🏡" to "Rent / Mortgage",
+        "🧾" to "Property Tax",
+        "🛠" to "Maintenance / Repairs",
+        "🛋" to "Furniture",
+        "🛒" to "Groceries",
+        "🍔" to "Eating Out",
+        "☕" to "Coffee / Snacks",
+        "⛽" to "Fuel",
+        "🚌" to "Public Transport",
+        "🚕" to "Taxi / Ride Sharing",
+        "🛠" to "Car Maintenance",
+        "💳" to "Car Loan / EMI",
+        "💡" to "Electricity",
+        "🚰" to "Water",
+        "📶" to "Internet",
+        "📱" to "Mobile Bill",
+        "📺" to "TV / OTT Subscription",
+        "🩺" to "Doctor Visits",
+        "💊" to "Medicines",
+        "🧪" to "Lab Tests",
+        "🛡" to "Health Insurance",
+        "📚" to "School / College Fees",
+        "🖊" to "Courses / Certifications",
+        "🧑‍🏫" to "Coaching / Training",
+        "👕" to "Clothing",
+        "👟" to "Shoes",
+        "🧴" to "Personal Care",
+        "🎁" to "Gifts Given",
+        "🎥" to "Movies",
+        "🎮" to "Games",
+        "🎵" to "Music Subscription",
+        "📺" to "Streaming Services",
+        "✈️" to "Flights",
+        "🏨" to "Hotels",
+        "🧳" to "Vacation Expenses",
+        "💳" to "Credit Card Payment",
+        "🏦" to "Loan EMI",
+        "📉" to "Investments",
+        "💰" to "Savings",
+        "🐾" to "Pet Care",
+        "🙏" to "Donations / Charity",
+        "📌" to "Miscellaneous"
     )
 
     fun getDefaultCategories(): List<CategoryEntity> {
         val list = mutableListOf<CategoryEntity>()
-        expenseCategories.forEach { (name, icon, color) ->
+
+        expenseCategories.forEach { (icon, name) ->
             list.add(
                 CategoryEntity(
                     name = name,
                     type = TransactionType.EXPENSE.name,
                     icon = icon,
-                    color = color
+                    color = "#E57373",
+                    isSystem = true
                 )
             )
         }
-        incomeCategories.forEach { (name, icon, color) ->
+
+        incomeCategories.forEach { (icon, name) ->
             list.add(
                 CategoryEntity(
                     name = name,
                     type = TransactionType.INCOME.name,
                     icon = icon,
-                    color = color
+                    color = "#66BB6A",
+                    isSystem = true
                 )
             )
         }
+
         return list
     }
 }
