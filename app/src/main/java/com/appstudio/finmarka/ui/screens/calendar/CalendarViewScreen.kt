@@ -199,14 +199,22 @@ fun CalendarViewScreen() {
                 events.add(event)
 
                 if (setReminder) {
-                    ReminderScheduler.scheduleReminder(
-                        context = context,
-                        triggerAtMillis = event.dateTime,
-                        title = "${event.type} Reminder",
-                        body = event.title,
-                        requestCode = event.id
-                    )
-                    statusMessage = "Reminder scheduled for ${dateTimeFormatter.format(calendar.time)}"
+                    if (event.dateTime <= System.currentTimeMillis()) {
+                        statusMessage = "Event added, but reminder time must be in the future."
+                    } else {
+                        val scheduled = ReminderScheduler.scheduleReminder(
+                            context = context,
+                            triggerAtMillis = event.dateTime,
+                            title = "${event.type} Reminder",
+                            body = event.title,
+                            requestCode = event.id
+                        )
+                        statusMessage = if (scheduled) {
+                            "Reminder scheduled for ${dateTimeFormatter.format(calendar.time)}"
+                        } else {
+                            "Event added, but reminder could not be scheduled on this device."
+                        }
+                    }
                 } else {
                     statusMessage = "Event added without reminder."
                 }
