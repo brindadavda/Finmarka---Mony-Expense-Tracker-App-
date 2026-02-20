@@ -85,6 +85,12 @@ fun TransactionsScreen(
             .fillMaxSize()
             .windowInsetsPadding(WindowInsets.statusBars.union(WindowInsets.navigationBars))
     ) {
+        Text(
+            text = "All Transection",
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+        )
         TabRow(selectedTabIndex = selectedTab) {
             tabs.forEachIndexed { index, title ->
                 Tab(

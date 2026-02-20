@@ -107,7 +107,7 @@ fun AddEditTransactionScreen(
             )
         }
         Text(
-            text = if (state.isEdit) "Edit Transaction" else "Add Transaction",
+            text = "All Transection",
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface
         )
