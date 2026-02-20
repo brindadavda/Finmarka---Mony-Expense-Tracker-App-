@@ -107,7 +107,7 @@ fun AddEditTransactionScreen(
             )
         }
         Text(
-            text = "All Transection",
+            text = "Add Transection",
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface
         )
