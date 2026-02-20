@@ -2,54 +2,22 @@ package com.appstudio.finmarka.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// ------------------------------------------------------
-// ✅ Default Material 3 Template Colors
-// ------------------------------------------------------
+val FinGreen = Color(0xFF24B06B)
+val FinBlue = Color(0xFF2D7DFA)
+val FinNavy = Color(0xFF121A2F)
+val FinMint = Color(0xFFE8FFF4)
+val FinCardLight = Color(0xFFFFFFFF)
+val FinBackgroundLight = Color(0xFFF3F7FF)
+val FinBackgroundDark = Color(0xFF090F1F)
+val FinSurfaceDark = Color(0xFF121A2E)
+val FinTextDark = Color(0xFF1A2238)
+val FinTextMuted = Color(0xFF71809C)
+val ExpenseRed = Color(0xFFE35D6A)
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
-
-val Purple40 = Color(0xFF6650A4)
-val PurpleGrey40 = Color(0xFF625B71)
-val Pink40 = Color(0xFF7D5260)
-
-
-// ------------------------------------------------------
-// ✅ Finmarka Custom Finance Colors
-// ------------------------------------------------------
-
-// 💸 Expense Color (Red)
-val ExpenseRed = Color(0xFFE53935)
-
-// 💰 Income Color (Green)
-val IncomeGreen = Color(0xFF43A047)
-
-// 💳 Balance / Primary Finance Blue
-val BalanceBlue = Color(0xFF1E88E5)
-
-
-// ------------------------------------------------------
-// ✅ Extra UI Colors (Recommended for Finance Apps)
-// ------------------------------------------------------
-
-// Background Light Gray
-val BackgroundGray = Color(0xFFF5F5F5)
-
-// Card White
-val CardWhite = Color(0xFFFFFFFF)
-
-// Text Dark
-val TextBlack = Color(0xFF212121)
-
-// Text Light Gray
-val TextGray = Color(0xFF757575)
-
-
-// ------------------------------------------------------
-// ✅ Optional Chart Colors (Future Use)
-// ------------------------------------------------------
-
-val ChartOrange = Color(0xFFFF9800)
-val ChartPurple = Color(0xFF8E24AA)
-val ChartTeal = Color(0xFF009688)
+val IncomeGreen = FinGreen
+val BalanceBlue = FinBlue
+val BackgroundGray = FinBackgroundLight
+val CardWhite = FinCardLight
+val TextBlack = FinTextDark
+val TextGray = FinTextMuted
+val ChartOrange = Color(0xFFFFAA33)
