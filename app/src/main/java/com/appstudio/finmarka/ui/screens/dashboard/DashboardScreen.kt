@@ -48,11 +48,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.appstudio.finmarka.R
 import com.appstudio.finmarka.data.model.TransactionType
 import com.appstudio.finmarka.domain.model.Transaction
 import com.appstudio.finmarka.ui.theme.ExpenseRed
@@ -116,7 +118,7 @@ fun DashboardScreen(
                             color = Color(0xFF9CB0CC)
                         )
                         Text(
-                            text = "FinNote",
+                            text = stringResource(R.string.app_name),
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -342,7 +344,7 @@ private fun MetricPill(
         colors = CardDefaults.cardColors(containerColor = tint.copy(alpha = 0.18f))
     ) {
         Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
-            Text(text = title, style = MaterialTheme.typography.labelLarge, color = tint)
+            Text(text = title, style = MaterialTheme.typography.labelSmall, color = tint)
             Spacer(modifier = Modifier.height(4.dp))
             Text(text = value, style = MaterialTheme.typography.headlineSmall, color = tint, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
