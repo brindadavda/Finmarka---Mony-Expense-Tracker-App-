@@ -151,8 +151,8 @@ fun SettingsScreen(
                     .padding(20.dp)
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Profile & Settings", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold)
-                    Text("Manage your preferences smartly", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f))
+                    Text("Settings", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold)
+                    Text("Control your app preferences, security and personalization.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f))
                     Text("Finmarka v$version", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f))
                 }
             }
