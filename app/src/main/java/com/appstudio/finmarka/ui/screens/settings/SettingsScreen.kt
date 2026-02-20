@@ -46,10 +46,8 @@ import androidx.compose.material.icons.outlined.Policy
 import androidx.compose.material.icons.outlined.SettingsSuggest
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenu
-import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -296,7 +294,6 @@ private fun SettingsActionRow(icon: ImageVector, title: String, subtitle: String
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CurrencyDropdown(
     selectedCurrency: String,
@@ -305,10 +302,9 @@ fun CurrencyDropdown(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+    Box {
         Row(
             modifier = Modifier
-                .menuAnchor()
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
                 .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
@@ -320,7 +316,7 @@ fun CurrencyDropdown(
             Icon(imageVector = Icons.Outlined.ArrowDropDown, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
 
-        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             currencies.forEach { currency ->
                 DropdownMenuItem(
                     text = { Text(currencyLabel(currency)) },
