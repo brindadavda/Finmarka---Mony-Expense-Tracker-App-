@@ -26,12 +26,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -44,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -55,17 +59,32 @@ import com.appstudio.finmarka.ui.theme.IncomeGreen
 import com.appstudio.finmarka.ui.util.formatDateTimeTravel
 import com.appstudio.finmarka.ui.viewmodel.DashboardViewModel
 import com.appstudio.finmarka.ui.viewmodel.TransactionsViewModel
+import java.time.LocalDate
+import java.time.ZoneId
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun DashboardScreen(
     onNavigateToTransactions: () -> Unit,
     onNavigateToAddTransaction: () -> Unit,
+    onNavigateToReports: () -> Unit,
+    onNavigateToBudget: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onTransactionClick: (Int) -> Unit,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    val zone = ZoneId.systemDefault()
+    val cutoff = LocalDate.now().minusDays(3).atStartOfDay(zone).toInstant().toEpochMilli()
+    val recentItems = state.recentTransactions.filter { it.dateTime >= cutoff }.take(4)
+    val savingsValue = viewModel.formatWithPrefCurrency(state.totalIncome - state.totalExpense)
+
+    val accentBrush = Brush.linearGradient(
+        colors = listOf(
+            Color(0xFF1CD8A6),
+            Color(0xFF3E8BFF)
+        )
+    )
 
     Box(
         modifier = Modifier
@@ -89,17 +108,25 @@ fun DashboardScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "Finmarka",
+                            text = "FinNote",
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold
                         )
                     }
-                    IconButton(onClick = onNavigateToSettings) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Open settings",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(accentBrush),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        IconButton(onClick = onNavigateToSettings) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = "Open settings",
+                                tint = Color.White
+                            )
+                        }
                     }
                 }
             }
@@ -153,34 +180,26 @@ fun DashboardScreen(
                                     value = viewModel.formatWithPrefCurrency(state.totalExpense),
                                     tint = MaterialTheme.colorScheme.onPrimary
                                 )
-                            }
-
-                            Card(
-                                shape = RoundedCornerShape(16.dp),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f))
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 14.dp, vertical = 10.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "Today's spending",
-                                        style = MaterialTheme.typography.titleSmall,
-                                        color = MaterialTheme.colorScheme.onPrimary,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    Text(
-                                        text = viewModel.formatWithPrefCurrency(state.todaySpending),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = MaterialTheme.colorScheme.onPrimary,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
+                                MetricPill(
+                                    modifier = Modifier.weight(1f),
+                                    title = "Savings",
+                                    value = savingsValue,
+                                    tint = MaterialTheme.colorScheme.onPrimary
+                                )
                             }
                         }
                     }
+                }
+            }
+
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    ActionCard("Transactions", Icons.Default.List, onNavigateToTransactions, Modifier.weight(1f))
+                    ActionCard("Report", Icons.Default.BarChart, onNavigateToReports, Modifier.weight(1f))
+                    ActionCard("Budget", Icons.Default.PieChart, onNavigateToBudget, Modifier.weight(1f))
                 }
             }
 
@@ -204,23 +223,99 @@ fun DashboardScreen(
                 }
             }
 
-            items(state.recentTransactions) { transaction ->
-                TransactionItem(transaction = transaction, onClick = { onTransactionClick(transaction.id) })
+            if (recentItems.isEmpty()) {
+                item { EmptyTransactionsCard() }
+            } else {
+                items(recentItems) { transaction ->
+                    TransactionItem(transaction = transaction, onClick = { onTransactionClick(transaction.id) })
+                }
             }
         }
 
-        FloatingActionButton(
-            onClick = onNavigateToAddTransaction,
-            shape = CircleShape,
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary,
+        Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(20.dp)
-                .size(62.dp)
+                .size(78.dp)
                 .clip(CircleShape)
+                .background(accentBrush)
+                .clickable(onClick = onNavigateToAddTransaction),
+            contentAlignment = Alignment.Center
         ) {
-            Icon(imageVector = Icons.Default.Add, contentDescription = "Add transaction", modifier = Modifier.size(30.dp))
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Add transaction",
+                tint = Color.White,
+                modifier = Modifier.size(34.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun ActionCard(title: String, icon: ImageVector, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier
+            .clip(RoundedCornerShape(20.dp))
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp, vertical = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(icon, contentDescription = title, tint = MaterialTheme.colorScheme.primary)
+            }
+            Text(text = title, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface)
+        }
+    }
+}
+
+@Composable
+private fun EmptyTransactionsCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 36.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(88.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.TrendingUp,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(34.dp)
+                )
+            }
+            Text(text = "No transactions yet", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                text = "Start tracking your finances by adding your first transaction.",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

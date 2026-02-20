@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.ArrowDropDown
 import androidx.compose.material.icons.outlined.ArrowForwardIos
 import androidx.compose.material.icons.outlined.Backup
@@ -49,6 +50,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -86,7 +88,8 @@ fun SettingsScreen(
     onNavigateToAboutUs: () -> Unit,
     onNavigateToPrivacyPolicy: () -> Unit,
     onNavigateToTerms: () -> Unit,
-    onNavigateToRoute: (String) -> Unit
+    onNavigateToRoute: (String) -> Unit,
+    onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current
     val currency by viewModel.currency.collectAsState()
@@ -110,7 +113,6 @@ fun SettingsScreen(
         SettingsModuleItem(Icons.Default.CreditCard, "Budget", "Plan monthly spending and alerts", "budget"),
         SettingsModuleItem(Icons.Default.Person, "Merchants", "Sources, payees, and vendors", "merchants"),
         SettingsModuleItem(Icons.Default.Wallet, "Assets", "Track assets and net worth", "assets"),
-        SettingsModuleItem(Icons.Default.AttachMoney, "Savings", "Goals and progress tracking", "savings"),
         SettingsModuleItem(Icons.Default.Payments, "Loans", "Loan schedules and balances", "loans"),
         SettingsModuleItem(Icons.Default.EventNote, "Bill Reminders", "Upcoming and recurring bills", "bill_reminders"),
         SettingsModuleItem(Icons.Default.NoteAlt, "Notes", "Attach notes to finance items", "notes"),
@@ -131,6 +133,33 @@ fun SettingsScreen(
             .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)),
+                contentAlignment = Alignment.Center
+            ) {
+                IconButton(onClick = onNavigateBack) {
+                    Icon(
+                        imageVector = Icons.Outlined.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = "Settings",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
