@@ -11,7 +11,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -35,7 +34,6 @@ import com.appstudio.finmarka.ui.screens.calculators.CalculatorsScreen
 import com.appstudio.finmarka.ui.screens.dashboard.DashboardScreen
 import com.appstudio.finmarka.ui.screens.exchange.ExchangeRatesScreen
 import com.appstudio.finmarka.ui.screens.lock.LockScreen
-import com.appstudio.finmarka.ui.screens.more.MoreScreen
 import com.appstudio.finmarka.ui.screens.notes.AddEditNoteScreen
 import com.appstudio.finmarka.ui.screens.notes.NotesListScreen
 import com.appstudio.finmarka.ui.screens.reminders.BillRemindersScreen
@@ -250,13 +248,12 @@ private fun MainScreen(
     val navControllerInner = rememberNavController()
     val navBackStackEntry by navControllerInner.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
-    val showBottomBar = currentDestination?.route in listOf("home", "transactions", "reports", "settings", "more")
+    val showBottomBar = currentDestination?.route in listOf("home", "transactions", "reports", "settings")
     val bottomBarItems = listOf(
         BottomNavItem("home", Icons.Default.Home, "Home"),
         BottomNavItem("transactions", Icons.Default.List, "Transactions"),
         BottomNavItem("reports", Icons.Default.BarChart, "Reports"),
-        BottomNavItem("settings", Icons.Default.Settings, "Settings"),
-        BottomNavItem("more", Icons.Default.Menu, "More")
+        BottomNavItem("settings", Icons.Default.Settings, "Settings")
     )
 
     Scaffold(
@@ -285,6 +282,7 @@ private fun MainScreen(
                 DashboardScreen(
                     onNavigateToTransactions = { navControllerInner.navigate("transactions") },
                     onNavigateToAddTransaction = { navController.navigate("add_transaction") },
+                    onNavigateToSettings = { navControllerInner.navigate("settings") },
                     onTransactionClick = { id -> navController.navigate("edit_transaction/$id") }
                 )
             }
@@ -296,12 +294,6 @@ private fun MainScreen(
             composable("reports") {
                 ReportsScreen()
             }
-            composable("more") {
-                MoreScreen(
-                    onNavigate = { route -> navController.navigate(route) },
-                    onNavigateInner = { route -> navControllerInner.navigate(route) }
-                )
-            }
             composable("settings") {
                 SettingsScreen(
                     onNavigateToCategories = { navController.navigate("categories") },
@@ -309,7 +301,8 @@ private fun MainScreen(
                     onNavigateToAppLock = { navController.navigate("app_lock") },
                     onNavigateToAboutUs = { navController.navigate("about_us") },
                     onNavigateToPrivacyPolicy = { navController.navigate("privacy_policy") },
-                    onNavigateToTerms = { navController.navigate("terms") }
+                    onNavigateToTerms = { navController.navigate("terms") },
+                    onNavigateToRoute = { route -> navControllerInner.navigate(route) }
                 )
             }
             composable("budget") {

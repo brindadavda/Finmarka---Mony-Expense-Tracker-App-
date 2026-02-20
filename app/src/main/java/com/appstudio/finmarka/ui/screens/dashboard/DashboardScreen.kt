@@ -2,7 +2,6 @@ package com.appstudio.finmarka.ui.screens.dashboard
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,16 +20,19 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,17 +40,16 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.appstudio.finmarka.data.model.TransactionType
 import com.appstudio.finmarka.domain.model.Transaction
-import com.appstudio.finmarka.ui.viewmodel.DashboardViewModel
 import com.appstudio.finmarka.ui.theme.ExpenseRed
 import com.appstudio.finmarka.ui.theme.IncomeGreen
 import com.appstudio.finmarka.ui.util.formatDateTimeTravel
-import com.appstudio.finmarka.data.model.TransactionType
+import com.appstudio.finmarka.ui.viewmodel.DashboardViewModel
 import com.appstudio.finmarka.ui.viewmodel.TransactionsViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -56,8 +57,9 @@ import com.appstudio.finmarka.ui.viewmodel.TransactionsViewModel
 fun DashboardScreen(
     onNavigateToTransactions: () -> Unit,
     onNavigateToAddTransaction: () -> Unit,
+    onNavigateToSettings: () -> Unit,
     onTransactionClick: (Int) -> Unit,
-    viewModel: DashboardViewModel = hiltViewModel(),
+    viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -68,6 +70,32 @@ fun DashboardScreen(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Welcome back",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "Finmarka",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                IconButton(onClick = onNavigateToSettings) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "Open settings",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        }
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -80,7 +108,7 @@ fun DashboardScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Total Expense",
+                        text = "Total Balance",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
@@ -111,24 +139,11 @@ fun DashboardScreen(
                         modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            Icons.Default.ArrowDownward,
-                            contentDescription = null,
-                            tint = IncomeGreen,
-                            modifier = Modifier.size(28.dp)
-                        )
+                        Icon(Icons.Default.ArrowDownward, null, tint = IncomeGreen, modifier = Modifier.size(28.dp))
                         Spacer(modifier = Modifier.size(12.dp))
                         Column {
-                            Text(
-                                text = "Income",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = viewModel.formatWithPrefCurrency(state.totalIncome),
-                                style = MaterialTheme.typography.titleMedium,
-                                color = IncomeGreen
-                            )
+                            Text("Income", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(viewModel.formatWithPrefCurrency(state.totalIncome), style = MaterialTheme.typography.titleMedium, color = IncomeGreen)
                         }
                     }
                 }
@@ -141,24 +156,11 @@ fun DashboardScreen(
                         modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            Icons.Default.ArrowUpward,
-                            contentDescription = null,
-                            tint = ExpenseRed,
-                            modifier = Modifier.size(28.dp)
-                        )
+                        Icon(Icons.Default.ArrowUpward, null, tint = ExpenseRed, modifier = Modifier.size(28.dp))
                         Spacer(modifier = Modifier.size(12.dp))
                         Column {
-                            Text(
-                                text = "Expense",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = viewModel.formatWithPrefCurrency(state.totalExpense),
-                                style = MaterialTheme.typography.titleMedium,
-                                color = ExpenseRed
-                            )
+                            Text("Expense", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(viewModel.formatWithPrefCurrency(state.totalExpense), style = MaterialTheme.typography.titleMedium, color = ExpenseRed)
                         }
                     }
                 }
@@ -189,41 +191,12 @@ fun DashboardScreen(
             }
         }
         item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = "Monthly Insights",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                    Text(
-                        text = "You saved 12% more compared to last month. Dining is up by 8%.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                }
-            }
-        }
-        item {
-            Button(
-                onClick = onNavigateToAddTransaction,
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Button(onClick = onNavigateToAddTransaction, modifier = Modifier.fillMaxWidth()) {
                 Text("Quick Add Transaction")
             }
         }
         item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = "Recent Transactions",
                     style = MaterialTheme.typography.titleMedium,
@@ -231,21 +204,18 @@ fun DashboardScreen(
                     modifier = Modifier.weight(1f)
                 )
                 Text(
-                    text = "See all",
+                    text = "See All",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier
-                        .clickable { onNavigateToTransactions() }
+                        .clickable(onClick = onNavigateToTransactions)
                         .padding(4.dp)
                 )
-                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                Icon(Icons.Default.ChevronRight, null, tint = MaterialTheme.colorScheme.primary)
             }
         }
-        items(state.recentTransactions.size) { index ->
-            TransactionItem(
-                transaction = state.recentTransactions[index],
-                onClick = { onTransactionClick(state.recentTransactions[index].id) }
-            )
+        items(state.recentTransactions) { transaction ->
+            TransactionItem(transaction = transaction, onClick = { onTransactionClick(transaction.id) })
         }
     }
 }
@@ -287,9 +257,8 @@ private fun TransactionItem(
             Text(
                 text = transaction.displayAmount(viewModel.getCurrencyCode),
                 style = MaterialTheme.typography.titleMedium,
-                color = transaction.displayColor
+                color = if (transaction.type == TransactionType.INCOME) IncomeGreen else ExpenseRed
             )
-
         }
     }
 }
