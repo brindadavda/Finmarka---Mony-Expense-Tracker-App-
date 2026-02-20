@@ -48,6 +48,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -85,10 +86,17 @@ fun DashboardScreen(
             Color(0xFF3E8BFF)
         )
     )
+    val screenBackground = Brush.verticalGradient(
+        colors = listOf(
+            Color(0xFF1F2D47),
+            Color(0xFF08121F)
+        )
+    )
 
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(screenBackground)
             .windowInsetsPadding(WindowInsets.statusBars.union(WindowInsets.navigationBars))
     ) {
         LazyColumn(
@@ -105,12 +113,13 @@ fun DashboardScreen(
                         Text(
                             text = "Welcome back",
                             style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = Color(0xFF9CB0CC)
                         )
                         Text(
                             text = "FinNote",
                             style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
                         )
                     }
                     Box(
@@ -142,8 +151,8 @@ fun DashboardScreen(
                             .background(
                                 Brush.linearGradient(
                                     colors = listOf(
-                                        MaterialTheme.colorScheme.primary,
-                                        MaterialTheme.colorScheme.secondary
+                                        Color(0xFF24C39E),
+                                        Color(0xFF3E7DE8)
                                     )
                                 )
                             )
@@ -153,16 +162,16 @@ fun DashboardScreen(
                             Text(
                                 text = "Total Balance",
                                 style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colorScheme.onPrimary
+                                color = Color(0xFFEAF6FF)
                             )
 
                             if (state.isLoading) {
-                                CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary)
+                                CircularProgressIndicator(color = Color(0xFFEAF6FF))
                             } else {
                                 Text(
                                     text = viewModel.formatWithPrefCurrency(state.totalBalance),
                                     style = MaterialTheme.typography.displaySmall,
-                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    color = Color(0xFFEAF6FF),
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -208,18 +217,18 @@ fun DashboardScreen(
                     Text(
                         text = "Recent Transactions",
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = Color.White,
                         modifier = Modifier.weight(1f)
                     )
                     Text(
                         text = "See All",
                         style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = Color(0xFF8DB3FF),
                         modifier = Modifier
                             .clickable(onClick = onNavigateToTransactions)
                             .padding(4.dp)
                     )
-                    Icon(Icons.Default.ChevronRight, null, tint = MaterialTheme.colorScheme.primary)
+                    Icon(Icons.Default.ChevronRight, null, tint = Color(0xFF8DB3FF))
                 }
             }
 
@@ -259,7 +268,7 @@ private fun ActionCard(title: String, icon: ImageVector, onClick: () -> Unit, mo
             .clip(RoundedCornerShape(20.dp))
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2340))
     ) {
         Column(
             modifier = Modifier
@@ -272,12 +281,12 @@ private fun ActionCard(title: String, icon: ImageVector, onClick: () -> Unit, mo
                 modifier = Modifier
                     .size(52.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+                    .background(Color(0xFF1E3A56)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(icon, contentDescription = title, tint = MaterialTheme.colorScheme.primary)
+                Icon(icon, contentDescription = title, tint = Color(0xFF1CD8A6))
             }
-            Text(text = title, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface)
+            Text(text = title, style = MaterialTheme.typography.titleSmall, color = Color.White)
         }
     }
 }
@@ -287,7 +296,7 @@ private fun EmptyTransactionsCard() {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2340))
     ) {
         Column(
             modifier = Modifier
@@ -300,21 +309,21 @@ private fun EmptyTransactionsCard() {
                 modifier = Modifier
                     .size(88.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                    .background(Color(0xFF223554)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.TrendingUp,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = Color(0xFF9CB0CC),
                     modifier = Modifier.size(34.dp)
                 )
             }
-            Text(text = "No transactions yet", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(text = "No transactions yet", style = MaterialTheme.typography.titleMedium, color = Color(0xFFDDE7F8))
             Text(
                 text = "Start tracking your finances by adding your first transaction.",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 34.sp),
+                color = Color(0xFF9CB0CC)
             )
         }
     }
@@ -351,7 +360,7 @@ private fun TransactionItem(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2340)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
@@ -364,14 +373,14 @@ private fun TransactionItem(
                 Text(
                     text = transaction.categoryName,
                     style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = Color.White,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = formatDateTimeTravel(transaction.dateTime),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = Color(0xFF9CB0CC)
                 )
             }
             Text(
