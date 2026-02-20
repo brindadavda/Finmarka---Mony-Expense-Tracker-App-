@@ -344,7 +344,7 @@ private fun MetricPill(
         Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
             Text(text = title, style = MaterialTheme.typography.labelLarge, color = tint)
             Spacer(modifier = Modifier.height(4.dp))
-            Text(text = value, style = MaterialTheme.typography.titleLarge, color = tint, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(text = value, style = MaterialTheme.typography.headlineSmall, color = tint, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }

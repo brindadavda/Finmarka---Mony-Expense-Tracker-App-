@@ -341,7 +341,7 @@ private fun SettingsActionRow(icon: ImageVector, title: String, subtitle: String
             Text(text = title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(text = subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        Icon(imageVector = Icons.Outlined.ArrowForwardIos, contentDescription = null, tint = Color.WhiteVariant, modifier = Modifier.size(16.dp))
+        Icon(imageVector = Icons.Outlined.ArrowForwardIos, contentDescription = null, tint = Color.White.copy(alpha = 0.8f), modifier = Modifier.size(16.dp))
     }
 }
 
@@ -364,7 +364,7 @@ fun CurrencyDropdown(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(text = currencyLabel(selectedCurrency), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-            Icon(imageVector = Icons.Outlined.ArrowDropDown, contentDescription = null, tint = Color.WhiteVariant)
+            Icon(imageVector = Icons.Outlined.ArrowDropDown, contentDescription = null, tint = Color.White.copy(alpha = 0.8f))
         }
 
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
