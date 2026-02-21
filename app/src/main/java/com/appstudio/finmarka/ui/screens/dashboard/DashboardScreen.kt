@@ -429,21 +429,21 @@ private fun RecentTransactionCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Text(
-                    text = transaction.merchantName ?: transaction.paymentMode.displayName,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+//                Text(
+//                    text = transaction.paymentMode.displayName,
+//                    style = MaterialTheme.typography.bodyMedium,
+//                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+//                    maxLines = 1,
+//                    overflow = TextOverflow.Ellipsis
+//                )
 
-                Spacer(modifier = Modifier.height(spacing.sm))
+//                Spacer(modifier = Modifier.height(spacing.sm))
 
                 Row(horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-                    TransactionTagChip(label = transaction.paymentMode.displayName)
-                    transaction.note
-                        ?.takeIf { it.isNotBlank() }
-                        ?.let { TransactionTagChip(label = it.take(10)) }
+                    TransactionTagChip(label = transaction.accountName)
+//                    transaction.note
+//                        ?.takeIf { it.isNotBlank() }
+//                        ?.let { TransactionTagChip(label = it.take(10)) }
                 }
             }
 

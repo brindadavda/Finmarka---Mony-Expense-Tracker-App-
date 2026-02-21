@@ -233,7 +233,7 @@ private fun calculateDelta(
         when (transaction.type) {
             TransactionType.INCOME -> transaction.amount
             TransactionType.EXPENSE -> -transaction.amount
-            TransactionType.TRANSFER -> 0.0
+            TransactionType.SAVINGS -> 0.0
         }
     }
 }

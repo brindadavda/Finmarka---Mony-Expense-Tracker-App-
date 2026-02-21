@@ -12,6 +12,7 @@ data class TransactionEntity(
     val type: String, // INCOME / EXPENSE / TRANSFER
     val categoryId: Int,
     val accountId: Int? = null,
+    val accountName: String? = null,
     val merchantName: String? = null,
     val dateTime: Long,
     val note: String? = null,

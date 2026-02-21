@@ -17,6 +17,7 @@ data class Transaction(
     val type: TransactionType,
     val categoryId: Int,
     val categoryName: String = "",
+    val accountName: String = "",
     val accountId: Int? = null,
     val merchantName: String? = null,
     val dateTime: Long,

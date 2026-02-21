@@ -1,5 +1,6 @@
 package com.appstudio.finmarka.ui.screens.addtransaction
 
+import android.accounts.Account
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import androidx.compose.animation.AnimatedVisibility
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -31,6 +33,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.KeyboardArrowUp
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -43,7 +52,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.appstudio.finmarka.data.local.entity.AccountEntity
+import com.appstudio.finmarka.data.model.TransactionStatus
 import com.appstudio.finmarka.data.model.TransactionType
 import com.appstudio.finmarka.domain.model.Category
 import com.appstudio.finmarka.ui.components.AppActionTopBar
@@ -52,6 +64,7 @@ import com.appstudio.finmarka.ui.components.AppTextField
 import com.appstudio.finmarka.ui.theme.FinMarkElevation
 import com.appstudio.finmarka.ui.theme.LocalSpacing
 import com.appstudio.finmarka.ui.util.formatDate
+import com.appstudio.finmarka.ui.viewmodel.AddEditTransactionViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -74,6 +87,8 @@ fun AddEditTransactionScreen(
     }
 
     var showCategorySelector by rememberSaveable { mutableStateOf(false) }
+    var showAccountSelector by rememberSaveable { mutableStateOf(false) }
+    var showStatusSelector by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
     val calendar = remember(state.dateTime) {
         Calendar.getInstance().apply { timeInMillis = state.dateTime }
@@ -121,7 +136,8 @@ fun AddEditTransactionScreen(
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+            .background(MaterialTheme.colorScheme.background)
+            .padding(horizontal = 20.dp, vertical = 16.dp),
         contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             AppActionTopBar(
@@ -176,8 +192,19 @@ fun AddEditTransactionScreen(
             }
 
             AccountSelectorField(
-                accountName = state.accountName,
-                onClick = onAddAccount
+                accounts = state.accounts,
+                selectedAccountId = state.accountId,
+                accountNameFallback = state.accountName,
+                onAccountSelected = { viewModel.setAccountId(it) },
+                onAddAccount = onAddAccount,
+                expanded = showAccountSelector
+            )
+
+            StatusSelectorField(
+                selectedStatus = state.status,
+                expanded = showStatusSelector,
+                onStatusSelected = { viewModel.setStatus(it) },
+                onExpandedChange = { showStatusSelector = it }
             )
 
             DateTimeSelector(
@@ -256,14 +283,9 @@ private fun AmountSection(
             horizontalArrangement = Arrangement.spacedBy(spacing.sm)
         ) {
             Text(
-                text = currencySymbol,
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
                 text = "Amount",
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
 
@@ -295,13 +317,14 @@ private fun AmountSection(
                             style = MaterialTheme.typography.displaySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        innerTextField()
                         if (amount.isBlank()) {
                             Text(
                                 text = "0.00",
                                 style = MaterialTheme.typography.displaySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                        } else {
+                            innerTextField()
                         }
                     }
                 }
@@ -321,7 +344,7 @@ private fun TransactionTypeSegment(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(spacing.sm)
         ) {
-            listOf(TransactionType.EXPENSE, TransactionType.INCOME, TransactionType.TRANSFER).forEach { type ->
+            listOf(TransactionType.EXPENSE, TransactionType.INCOME, TransactionType.SAVINGS).forEach { type ->
                 val selected = selectedType == type
                 Surface(
                     modifier = Modifier
@@ -374,8 +397,8 @@ private fun CategorySelectorField(
                     color = titleColor
                 )
                 Icon(
-                    imageVector = Icons.Outlined.ChevronRight,
-                    contentDescription = if (expanded) "Collapse categories" else "Expand categories",
+                    imageVector = if (expanded) Icons.Outlined.KeyboardArrowUp else Icons.Outlined.KeyboardArrowDown,
+                    contentDescription = if (expanded) "Collapse accounts" else "Expand accounts",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -385,35 +408,6 @@ private fun CategorySelectorField(
                 text = "Please select at least one category",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error
-            )
-        }
-    }
-}
-
-@Composable
-private fun AccountSelectorField(
-    accountName: String,
-    onClick: () -> Unit
-) {
-    AppCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = accountName.ifBlank { "Select account" },
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Icon(
-                imageVector = Icons.Outlined.ChevronRight,
-                contentDescription = "Choose account",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -550,6 +544,155 @@ private fun DateTimeChip(
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AccountSelectorField(
+    accounts: List<AccountEntity>,       // List of accounts from ViewModel
+    selectedAccountId: Int?,             // Currently selected account ID
+    accountNameFallback: String,         // Fallback if accountId not found
+    onAccountSelected: (Int) -> Unit,
+    expanded: Boolean,
+    onAddAccount: () -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    // Get the name of the selected account
+    val selectedAccountName = accounts.firstOrNull { it.id == selectedAccountId }?.name
+        ?: accountNameFallback
+
+    Column(verticalArrangement = Arrangement.spacedBy(LocalSpacing.current.xs)) {
+        Text(
+            text = "Account",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded }
+        ) {
+            AppCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded } // toggle dropdown
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = selectedAccountName.ifBlank { "Select account" },
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Icon(
+                        imageVector = if (expanded) Icons.Outlined.KeyboardArrowUp else Icons.Outlined.KeyboardArrowDown,
+                        contentDescription = if (expanded) "Collapse accounts" else "Expand accounts",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                // Show all accounts
+                accounts.forEach { account ->
+                    DropdownMenuItem(
+                        text = { Text(account.name) },
+                        onClick = {
+                            onAccountSelected(account.id)
+                            expanded = false
+                        }
+                    )
+                }
+
+                // Add "Add Account" option
+                DropdownMenuItem(
+                    text = { Text("Add Account") },
+                    onClick = {
+                        expanded = false
+                        onAddAccount()
+                    }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun StatusSelectorField(
+    selectedStatus: TransactionStatus?,            // Currently selected status
+    expanded: Boolean,                             // Whether dropdown is open
+    onStatusSelected: (TransactionStatus) -> Unit,
+    onExpandedChange: (Boolean) -> Unit           // Toggle dropdown
+) {
+    val spacing = LocalSpacing.current
+
+    // Display name for selected status
+    val displayText = selectedStatus?.name?.lowercase()
+        ?.replaceFirstChar { it.uppercase() } ?: "Select status"
+
+    Column(verticalArrangement = Arrangement.spacedBy(spacing.xs)) {
+        Text(
+            text = "Status",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { onExpandedChange(!expanded) }
+        ) {
+            AppCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onExpandedChange(!expanded) }
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = displayText,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Icon(
+                        imageVector = if (expanded) Icons.Outlined.KeyboardArrowUp else Icons.Outlined.KeyboardArrowDown,
+                        contentDescription = if (expanded) "Collapse status" else "Expand status",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { onExpandedChange(false) }
+            ) {
+                TransactionStatus.entries.forEach { status ->
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = status.name.lowercase().replaceFirstChar { it.uppercase() },
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        },
+                        onClick = {
+                            onStatusSelected(status)
+                            onExpandedChange(false)
+                        }
+                    )
+                }
             }
         }
     }

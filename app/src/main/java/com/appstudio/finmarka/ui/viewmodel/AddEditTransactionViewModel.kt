@@ -1,5 +1,6 @@
 package com.appstudio.finmarka.ui.viewmodel
 
+import android.accounts.Account
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -105,7 +106,7 @@ class AddEditTransactionViewModel @Inject constructor(
                             amount = t.amount.toString(),
                             type = t.type,
                             categoryId = t.categoryId,
-                            accountName = t.accountId?.let { "Account #$it" } ?: "",
+                            accountName = t.accountName,
                             accountId = t.accountId,
                             merchantName = t.merchantName.orEmpty(),
                             dateTime = t.dateTime,
@@ -197,6 +198,7 @@ class AddEditTransactionViewModel @Inject constructor(
                         note = state.note.ifBlank { null },
                         paymentMode = state.paymentMode,
                         accountId = state.accountId,
+                        accountName = state.accountName,
                         merchantName = state.merchantName.ifBlank { null },
                         status = state.status,
                         isRecurring = state.isRecurring,
@@ -213,6 +215,7 @@ class AddEditTransactionViewModel @Inject constructor(
                         note = state.note.ifBlank { null },
                         paymentMode = state.paymentMode,
                         accountId = state.accountId,
+                        accountName = state.accountName,
                         merchantName = state.merchantName.ifBlank { null },
                         status = state.status,
                         isRecurring = state.isRecurring,
