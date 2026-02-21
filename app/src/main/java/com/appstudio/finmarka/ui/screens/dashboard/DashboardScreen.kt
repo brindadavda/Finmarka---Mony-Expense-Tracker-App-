@@ -66,8 +66,6 @@ import com.appstudio.finmarka.data.model.TransactionType
 import com.appstudio.finmarka.domain.model.Transaction
 import com.appstudio.finmarka.ui.theme.DashboardAccentEnd
 import com.appstudio.finmarka.ui.theme.DashboardAccentStart
-import com.appstudio.finmarka.ui.theme.DashboardBackgroundBottom
-import com.appstudio.finmarka.ui.theme.DashboardBackgroundTop
 import com.appstudio.finmarka.ui.theme.DashboardBalanceEnd
 import com.appstudio.finmarka.ui.theme.DashboardBalanceStart
 import com.appstudio.finmarka.ui.theme.DashboardCardSurface
@@ -109,17 +107,11 @@ fun DashboardScreen(
             DashboardAccentEnd
         )
     )
-    val screenBackground = Brush.verticalGradient(
-        colors = listOf(
-            DashboardBackgroundTop,
-            DashboardBackgroundBottom
-        )
-    )
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(screenBackground)
+            .background(MaterialTheme.colorScheme.background)
             .windowInsetsPadding(WindowInsets.statusBars.union(WindowInsets.navigationBars))
     ) {
         LazyColumn(
@@ -142,7 +134,7 @@ fun DashboardScreen(
                             text = stringResource(R.string.app_name),
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
-                            color = DashboardTextOnGradient
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                     Box(
@@ -203,20 +195,17 @@ fun DashboardScreen(
                                 MetricPill(
                                     modifier = Modifier.weight(1f),
                                     title = "Income",
-                                    value = viewModel.formatWithPrefCurrency(state.totalIncome),
-                                    tint = MaterialTheme.colorScheme.onPrimary
+                                    value = viewModel.formatWithPrefCurrency(state.totalIncome)
                                 )
                                 MetricPill(
                                     modifier = Modifier.weight(1f),
                                     title = "Expense",
-                                    value = viewModel.formatWithPrefCurrency(state.totalExpense),
-                                    tint = MaterialTheme.colorScheme.onPrimary
+                                    value = viewModel.formatWithPrefCurrency(state.totalExpense)
                                 )
                                 MetricPill(
                                     modifier = Modifier.weight(1f),
                                     title = "Savings",
-                                    value = savingsValue,
-                                    tint = MaterialTheme.colorScheme.onPrimary
+                                    value = savingsValue
                                 )
                             }
                         }
@@ -283,7 +272,7 @@ private fun RecentTransactionsHeader(onNavigateToTransactions: () -> Unit) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = "Recent Transactions",
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f)
         )
@@ -378,7 +367,7 @@ private fun MetricPill(
     modifier: Modifier,
     title: String,
     value: String,
-    tint: Color
+    tint: Color = DashboardTextOnGradient
 ) {
     Card(
         modifier = modifier,
@@ -430,7 +419,7 @@ private fun RecentTransactionCard(
                 )
             }
 
-            Spacer(modifier = Modifier.size(spacing.lg))
+            Spacer(modifier = Modifier.size(spacing.sm))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
