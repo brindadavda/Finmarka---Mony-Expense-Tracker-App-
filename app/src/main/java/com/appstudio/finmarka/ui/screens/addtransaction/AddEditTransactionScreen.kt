@@ -295,6 +295,7 @@ private fun AmountSection(
                             style = MaterialTheme.typography.displaySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        innerTextField()
                         if (amount.isBlank()) {
                             Text(
                                 text = "0.00",
@@ -302,7 +303,6 @@ private fun AmountSection(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        innerTextField()
                     }
                 }
             )
