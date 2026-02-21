@@ -135,7 +135,7 @@ fun SettingsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-             .background(Brush.verticalGradient(colors = listOf(Color(0xFF1F2D47), Color(0xFF08121F))))
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
             .windowInsetsPadding(WindowInsets.statusBars)
             .padding(horizontal = 20.dp, vertical = 16.dp),
@@ -165,7 +165,7 @@ fun SettingsScreen(
                 text = "Settings",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
 
