@@ -156,6 +156,7 @@ fun AddEditTransactionScreen(
             CategorySelectorField(
                 selectedCategory = selectedCategory,
                 expanded = showCategorySelector,
+                showError = state.error == "Select a category",
                 onClick = { showCategorySelector = !showCategorySelector }
             )
 
@@ -165,7 +166,7 @@ fun AddEditTransactionScreen(
                 exit = fadeOut() + shrinkVertically()
             ) {
                 CategoryGrid(
-                    categories = state.categories.filter { it.type == state.type },
+                    categories = state.categories,
                     selectedCategoryId = state.categoryId,
                     onCategorySelected = {
                         viewModel.setCategoryId(it)
@@ -347,27 +348,43 @@ private fun TransactionTypeSegment(
 private fun CategorySelectorField(
     selectedCategory: Category?,
     expanded: Boolean,
+    showError: Boolean,
     onClick: () -> Unit
 ) {
-    AppCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+    val titleColor = if (showError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
+    Column(verticalArrangement = Arrangement.spacedBy(LocalSpacing.current.xs)) {
+        Text(
+            text = "Category",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        AppCard(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
         ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = selectedCategory?.name ?: "Select category",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = titleColor
+                )
+                Icon(
+                    imageVector = Icons.Outlined.ChevronRight,
+                    contentDescription = if (expanded) "Collapse categories" else "Expand categories",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        if (showError) {
             Text(
-                text = selectedCategory?.name ?: "Select category",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Icon(
-                imageVector = Icons.Outlined.ChevronRight,
-                contentDescription = if (expanded) "Collapse categories" else "Expand categories",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                text = "Please select at least one category",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error
             )
         }
     }
