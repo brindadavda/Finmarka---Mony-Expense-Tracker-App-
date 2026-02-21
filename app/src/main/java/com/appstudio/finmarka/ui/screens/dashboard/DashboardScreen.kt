@@ -27,14 +27,22 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.Fastfood
+import androidx.compose.material.icons.filled.Laptop
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.PieChart
+import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -49,7 +57,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -57,13 +64,15 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.appstudio.finmarka.R
 import com.appstudio.finmarka.data.model.TransactionType
 import com.appstudio.finmarka.domain.model.Transaction
-import com.appstudio.finmarka.ui.theme.ExpenseRed
-import com.appstudio.finmarka.ui.theme.IncomeGreen
-import com.appstudio.finmarka.ui.util.formatDateTimeTravel
+import com.appstudio.finmarka.ui.theme.FinMarkElevation
+import com.appstudio.finmarka.ui.theme.LocalSpacing
 import com.appstudio.finmarka.ui.viewmodel.DashboardViewModel
 import com.appstudio.finmarka.ui.viewmodel.TransactionsViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.time.LocalDate
 import java.time.ZoneId
+import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -215,30 +224,21 @@ fun DashboardScreen(
             }
 
             item {
-                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "Recent Transactions",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Color.White,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Text(
-                        text = "See All",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = Color(0xFF8DB3FF),
-                        modifier = Modifier
-                            .clickable(onClick = onNavigateToTransactions)
-                            .padding(4.dp)
-                    )
-                    Icon(Icons.Default.ChevronRight, null, tint = Color(0xFF8DB3FF))
-                }
+                RecentTransactionsHeader(onNavigateToTransactions = onNavigateToTransactions)
             }
 
             if (recentItems.isEmpty()) {
                 item { EmptyTransactionsCard() }
             } else {
-                items(recentItems) { transaction ->
-                    TransactionItem(transaction = transaction, onClick = { onTransactionClick(transaction.id) })
+                items(
+                    items = recentItems,
+                    key = { it.id },
+                    contentType = { "recent_transaction" }
+                ) { transaction ->
+                    RecentTransactionCard(
+                        transaction = transaction,
+                        onClick = { onTransactionClick(transaction.id) }
+                    )
                 }
             }
         }
@@ -259,6 +259,36 @@ fun DashboardScreen(
                 tint = Color.White,
                 modifier = Modifier.size(34.dp)
             )
+        }
+    }
+}
+
+
+
+@Composable
+private fun RecentTransactionsHeader(onNavigateToTransactions: () -> Unit) {
+    val spacing = LocalSpacing.current
+    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = "Recent Transactions",
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f)
+        )
+        Row(
+            modifier = Modifier
+                .clip(MaterialTheme.shapes.small)
+                .clickable(onClick = onNavigateToTransactions)
+                .padding(horizontal = spacing.sm, vertical = spacing.xs),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(spacing.xs)
+        ) {
+            Text(
+                text = "See All",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.secondary
+            )
+            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
         }
     }
 }
@@ -324,7 +354,7 @@ private fun EmptyTransactionsCard() {
             Text(text = "No transactions yet", style = MaterialTheme.typography.titleMedium, color = Color(0xFFDDE7F8))
             Text(
                 text = "Start tracking your finances by adding your first transaction.",
-                style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 34.sp),
+                style = MaterialTheme.typography.bodyLarge,
                 color = Color(0xFF9CB0CC)
             )
         }
@@ -352,44 +382,123 @@ private fun MetricPill(
 }
 
 @Composable
-private fun TransactionItem(
+private fun RecentTransactionCard(
     transaction: Transaction,
     onClick: () -> Unit,
     viewModel: TransactionsViewModel = hiltViewModel()
 ) {
+    val spacing = LocalSpacing.current
+    val isIncome = transaction.type == TransactionType.INCOME
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2340)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        shape = MaterialTheme.shapes.extraLarge,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = FinMarkElevation.sm)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(spacing.lg),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Box(
+                modifier = Modifier
+                    .size(spacing.xxxl + spacing.sm)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = transaction.categoryName.toRecentIcon(),
+                    contentDescription = transaction.categoryName,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Spacer(modifier = Modifier.size(spacing.lg))
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = transaction.categoryName,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = Color.White,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = formatDateTimeTravel(transaction.dateTime),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF9CB0CC)
+                    text = transaction.merchantName ?: transaction.paymentMode.displayName,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(modifier = Modifier.height(spacing.sm))
+
+                Row(horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
+                    TransactionTagChip(label = transaction.paymentMode.displayName)
+                    transaction.note
+                        ?.takeIf { it.isNotBlank() }
+                        ?.let { TransactionTagChip(label = it.take(10)) }
+                }
+            }
+
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = transaction.displayAmount(viewModel.getCurrencyCode),
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = if (isIncome) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                )
+                Spacer(modifier = Modifier.height(spacing.sm))
+                Text(
+                    text = transaction.dateTime.toRecentTime(),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            Text(
-                text = transaction.displayAmount(viewModel.getCurrencyCode),
-                style = MaterialTheme.typography.titleMedium,
-                color = if (transaction.type == TransactionType.INCOME) IncomeGreen else ExpenseRed
-            )
         }
     }
 }
+
+@Composable
+private fun TransactionTagChip(label: String) {
+    FilterChip(
+        selected = false,
+        onClick = {},
+        label = {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.secondary
+            )
+        },
+        colors = FilterChipDefaults.filterChipColors(
+            containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.16f),
+            labelColor = MaterialTheme.colorScheme.secondary,
+            disabledContainerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.16f),
+            disabledLabelColor = MaterialTheme.colorScheme.secondary
+        ),
+        enabled = false,
+        border = null
+    )
+}
+
+private fun String.toRecentIcon(): ImageVector {
+    val label = lowercase(Locale.getDefault())
+    return when {
+        "food" in label || "dining" in label || "coffee" in label -> Icons.Default.Fastfood
+        "shop" in label || "amazon" in label || "buy" in label -> Icons.Default.ShoppingBag
+        "transport" in label || "fuel" in label || "car" in label -> Icons.Default.DirectionsCar
+        "salary" in label || "work" in label -> Icons.Default.Work
+        "freelance" in label || "design" in label || "tech" in label -> Icons.Default.Laptop
+        else -> Icons.Default.CardGiftcard
+    }
+}
+
+private fun Long.toRecentTime(): String {
+    return SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date(this))
+}
+
