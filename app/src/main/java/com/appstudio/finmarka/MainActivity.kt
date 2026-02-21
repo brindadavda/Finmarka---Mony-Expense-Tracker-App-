@@ -103,20 +103,23 @@ class MainActivity : ComponentActivity() {
                     composable("add_transaction") {
                         AddEditTransactionScreen(
                             onSaved = { navController.popBackStack() },
-                            onAddAccount = { navController.navigate("accounts") }
+                            onAddAccount = { navController.navigate("accounts") },
+                            onNavigateBack = { navController.popBackStack() }
                         )
                     }
                     composable("add_transaction?accountId={accountId}") {
                         AddEditTransactionScreen(
                             onSaved = { navController.popBackStack() },
-                            onAddAccount = { navController.navigate("accounts") }
+                            onAddAccount = { navController.navigate("accounts") },
+                            onNavigateBack = { navController.popBackStack() }
                         )
                     }
                     composable("edit_transaction/{transactionId}") { backStackEntry ->
                         val id = backStackEntry.arguments?.getString("transactionId")?.toIntOrNull() ?: 0
                         AddEditTransactionScreen(
                             onSaved = { navController.popBackStack() },
-                            onAddAccount = { navController.navigate("accounts") }
+                            onAddAccount = { navController.navigate("accounts") },
+                            onNavigateBack = { navController.popBackStack() }
                         )
                     }
                     composable("backup_restore") {

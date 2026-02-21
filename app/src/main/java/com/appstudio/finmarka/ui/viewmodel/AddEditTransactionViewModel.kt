@@ -38,9 +38,23 @@ data class AddEditTransactionUiState(
     val status: TransactionStatus = TransactionStatus.COMPLETED,
     val isRecurring: Boolean = false,
     val isEdit: Boolean = false,
+    val isActionEnabled: Boolean = false,
+    val hasChanges: Boolean = false,
     val transactionId: Int = 0,
     val saveSuccess: Boolean = false,
     val error: String? = null
+)
+
+private data class TransactionSnapshot(
+    val amount: String,
+    val type: TransactionType,
+    val categoryId: Int,
+    val accountId: Int?,
+    val merchantName: String,
+    val dateTime: Long,
+    val note: String,
+    val status: TransactionStatus,
+    val isRecurring: Boolean
 )
 
 @HiltViewModel
@@ -52,6 +66,8 @@ class AddEditTransactionViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
+    private var initialSnapshot: TransactionSnapshot? = null
+
     private val transactionId: Int? = savedStateHandle.get<String>("transactionId")?.toIntOrNull()
     private val accountIdArg: Int? = savedStateHandle.get<String>("accountId")?.toIntOrNull()
 
@@ -59,16 +75,16 @@ class AddEditTransactionViewModel @Inject constructor(
     val uiState: StateFlow<AddEditTransactionUiState> = _uiState.asStateFlow()
 
     init {
-        _uiState.update { it.copy(currency = preferencesManager.currencyCode) }
+        updateUiState { it.copy(currency = preferencesManager.currencyCode) }
         viewModelScope.launch {
             categoryRepository.ensureDefaultCategories()
             categoryRepository.getCategoriesAsDomain().collect { list ->
-                _uiState.update { it.copy(categories = list) }
+                updateUiState { it.copy(categories = list) }
             }
         }
         viewModelScope.launch {
             accountsRepository.getAllAccounts().collect { list ->
-                _uiState.update { current ->
+                updateUiState { current ->
                     val resolvedName = current.accountId?.let { selectedId ->
                         list.firstOrNull { it.id == selectedId }?.name.orEmpty()
                     }.orEmpty()
@@ -82,8 +98,8 @@ class AddEditTransactionViewModel @Inject constructor(
         transactionId?.let { id ->
             viewModelScope.launch {
                 transactionRepository.getTransactionById(id)?.let { t ->
-                    _uiState.update {
-                        it.copy(
+                    updateUiState {
+                        val updated = it.copy(
                             isEdit = true,
                             transactionId = id,
                             amount = t.amount.toString(),
@@ -99,11 +115,13 @@ class AddEditTransactionViewModel @Inject constructor(
                             isRecurring = t.isRecurring,
                             attachments = t.attachmentUris?.split(",")?.filter { it.isNotBlank() }.orEmpty()
                         )
+                        initialSnapshot = createSnapshot(updated)
+                        updated
                     }
                 }
             }
         } ?: run {
-            _uiState.update {
+            updateUiState {
                 it.copy(
                     categoryId = 0,
                     accountId = accountIdArg,
@@ -113,64 +131,38 @@ class AddEditTransactionViewModel @Inject constructor(
         }
     }
 
-    fun setAmount(value: String) {
-        _uiState.update { it.copy(amount = value, error = null) }
-    }
+    fun setAmount(value: String) = updateUiState { it.copy(amount = value, error = null) }
 
-    fun setCurrency(currency: String) {
-        _uiState.update { it.copy(currency = currency) }
-    }
+    fun setCurrency(currency: String) = updateUiState { it.copy(currency = currency) }
 
-    fun setType(type: TransactionType) {
-        _uiState.update { it.copy(type = type, categoryId = 0) }
-    }
+    fun setType(type: TransactionType) = updateUiState { it.copy(type = type, categoryId = 0) }
 
-    fun setCategoryId(id: Int) {
-        _uiState.update { it.copy(categoryId = id) }
-    }
+    fun setCategoryId(id: Int) = updateUiState { it.copy(categoryId = id) }
 
-    fun setAccountName(name: String) {
-        _uiState.update { it.copy(accountName = name) }
-    }
+    fun setAccountName(name: String) = updateUiState { it.copy(accountName = name) }
 
     fun setAccountId(id: Int?) {
         val accountName = id?.let { selectedId ->
             _uiState.value.accounts.firstOrNull { it.id == selectedId }?.name.orEmpty()
         }.orEmpty()
-        _uiState.update { it.copy(accountId = id, accountName = accountName) }
+        updateUiState { it.copy(accountId = id, accountName = accountName) }
     }
 
-    fun setMerchantName(name: String) {
-        _uiState.update { it.copy(merchantName = name) }
-    }
+    fun setMerchantName(name: String) = updateUiState { it.copy(merchantName = name) }
 
-    fun setTags(tags: List<String>) {
-        _uiState.update { it.copy(tags = tags) }
-    }
+    fun setTags(tags: List<String>) = updateUiState { it.copy(tags = tags) }
 
-    fun setAttachments(attachments: List<String>) {
-        _uiState.update { it.copy(attachments = attachments) }
-    }
+    fun setAttachments(attachments: List<String>) = updateUiState { it.copy(attachments = attachments) }
 
-    fun setDateTime(dateTime: Long) {
-        _uiState.update { it.copy(dateTime = dateTime) }
-    }
+    fun setDateTime(dateTime: Long) = updateUiState { it.copy(dateTime = dateTime) }
 
-    fun setNote(note: String) {
-        _uiState.update { it.copy(note = note) }
-    }
+    fun setNote(note: String) = updateUiState { it.copy(note = note) }
 
-    fun setPaymentMode(mode: PaymentMode) {
-        _uiState.update { it.copy(paymentMode = mode) }
-    }
+    fun setPaymentMode(mode: PaymentMode) = updateUiState { it.copy(paymentMode = mode) }
 
-    fun setStatus(status: TransactionStatus) {
-        _uiState.update { it.copy(status = status) }
-    }
+    fun setStatus(status: TransactionStatus) = updateUiState { it.copy(status = status) }
 
-    fun toggleRecurring() {
-        _uiState.update { it.copy(isRecurring = !it.isRecurring) }
-    }
+    fun toggleRecurring() = updateUiState { it.copy(isRecurring = !it.isRecurring) }
 
     fun save() {
         viewModelScope.launch {
@@ -236,5 +228,41 @@ class AddEditTransactionViewModel @Inject constructor(
 
     fun clearSaveSuccess() {
         _uiState.update { it.copy(saveSuccess = false) }
+    }
+
+    private fun updateUiState(transform: (AddEditTransactionUiState) -> AddEditTransactionUiState) {
+        _uiState.update { current ->
+            val updated = transform(current)
+            val hasChanges = computeHasChanges(updated)
+            updated.copy(
+                hasChanges = hasChanges,
+                isActionEnabled = computeActionEnabled(updated, hasChanges)
+            )
+        }
+    }
+
+    private fun computeActionEnabled(state: AddEditTransactionUiState, hasChanges: Boolean): Boolean {
+        val requiredFieldsCompleted = state.categoryId > 0 && (state.amount.toDoubleOrNull()?.let { it > 0 } == true)
+        return if (state.isEdit) requiredFieldsCompleted && hasChanges else requiredFieldsCompleted
+    }
+
+    private fun computeHasChanges(state: AddEditTransactionUiState): Boolean {
+        if (!state.isEdit) return false
+        val snapshot = initialSnapshot ?: return false
+        return snapshot != createSnapshot(state)
+    }
+
+    private fun createSnapshot(state: AddEditTransactionUiState): TransactionSnapshot {
+        return TransactionSnapshot(
+            amount = state.amount,
+            type = state.type,
+            categoryId = state.categoryId,
+            accountId = state.accountId,
+            merchantName = state.merchantName,
+            dateTime = state.dateTime,
+            note = state.note,
+            status = state.status,
+            isRecurring = state.isRecurring
+        )
     }
 }
