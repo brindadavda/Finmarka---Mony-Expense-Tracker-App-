@@ -64,6 +64,18 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.appstudio.finmarka.R
 import com.appstudio.finmarka.data.model.TransactionType
 import com.appstudio.finmarka.domain.model.Transaction
+import com.appstudio.finmarka.ui.theme.DashboardAccentEnd
+import com.appstudio.finmarka.ui.theme.DashboardAccentStart
+import com.appstudio.finmarka.ui.theme.DashboardBackgroundBottom
+import com.appstudio.finmarka.ui.theme.DashboardBackgroundTop
+import com.appstudio.finmarka.ui.theme.DashboardBalanceEnd
+import com.appstudio.finmarka.ui.theme.DashboardBalanceStart
+import com.appstudio.finmarka.ui.theme.DashboardCardSurface
+import com.appstudio.finmarka.ui.theme.DashboardCardSurfaceAlt
+import com.appstudio.finmarka.ui.theme.DashboardCardSurfaceMuted
+import com.appstudio.finmarka.ui.theme.DashboardTextMuted
+import com.appstudio.finmarka.ui.theme.DashboardTextOnDark
+import com.appstudio.finmarka.ui.theme.DashboardTextOnGradient
 import com.appstudio.finmarka.ui.theme.FinMarkElevation
 import com.appstudio.finmarka.ui.theme.LocalSpacing
 import com.appstudio.finmarka.ui.viewmodel.DashboardViewModel
@@ -93,14 +105,14 @@ fun DashboardScreen(
 
     val accentBrush = Brush.linearGradient(
         colors = listOf(
-            Color(0xFF1CD8A6),
-            Color(0xFF3E8BFF)
+            DashboardAccentStart,
+            DashboardAccentEnd
         )
     )
     val screenBackground = Brush.verticalGradient(
         colors = listOf(
-            Color(0xFF1F2D47),
-            Color(0xFF08121F)
+            DashboardBackgroundTop,
+            DashboardBackgroundBottom
         )
     )
 
@@ -124,13 +136,13 @@ fun DashboardScreen(
                         Text(
                             text = "Welcome back",
                             style = MaterialTheme.typography.titleMedium,
-                            color = Color(0xFF9CB0CC)
+                            color = DashboardTextMuted
                         )
                         Text(
                             text = stringResource(R.string.app_name),
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = DashboardTextOnGradient
                         )
                     }
                     Box(
@@ -144,7 +156,7 @@ fun DashboardScreen(
                             Icon(
                                 imageVector = Icons.Default.Settings,
                                 contentDescription = "Open settings",
-                                tint = Color.White
+                                tint = DashboardTextOnGradient
                             )
                         }
                     }
@@ -155,15 +167,15 @@ fun DashboardScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(28.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0f))
                 ) {
                     Box(
                         modifier = Modifier
                             .background(
                                 Brush.linearGradient(
                                     colors = listOf(
-                                        Color(0xFF24C39E),
-                                        Color(0xFF3E7DE8)
+                                        DashboardBalanceStart,
+                                        DashboardBalanceEnd
                                     )
                                 )
                             )
@@ -173,16 +185,16 @@ fun DashboardScreen(
                             Text(
                                 text = "Total Balance",
                                 style = MaterialTheme.typography.titleLarge,
-                                color = Color(0xFFEAF6FF)
+                                color = DashboardTextOnGradient
                             )
 
                             if (state.isLoading) {
-                                CircularProgressIndicator(color = Color(0xFFEAF6FF))
+                                CircularProgressIndicator(color = DashboardTextOnGradient)
                             } else {
                                 Text(
                                     text = viewModel.formatWithPrefCurrency(state.totalBalance),
                                     style = MaterialTheme.typography.displaySmall,
-                                    color = Color(0xFFEAF6FF),
+                                    color = DashboardTextOnGradient,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -256,7 +268,7 @@ fun DashboardScreen(
             Icon(
                 imageVector = Icons.Default.Add,
                 contentDescription = "Add transaction",
-                tint = Color.White,
+                tint = DashboardTextOnGradient,
                 modifier = Modifier.size(34.dp)
             )
         }
@@ -300,7 +312,7 @@ private fun ActionCard(title: String, icon: ImageVector, onClick: () -> Unit, mo
             .clip(RoundedCornerShape(20.dp))
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2340))
+        colors = CardDefaults.cardColors(containerColor = DashboardCardSurface)
     ) {
         Column(
             modifier = Modifier
@@ -313,12 +325,12 @@ private fun ActionCard(title: String, icon: ImageVector, onClick: () -> Unit, mo
                 modifier = Modifier
                     .size(52.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFF1E3A56)),
+                    .background(DashboardCardSurfaceAlt),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(icon, contentDescription = title, tint = Color(0xFF1CD8A6))
+                Icon(icon, contentDescription = title, tint = DashboardAccentStart)
             }
-            Text(text = title, style = MaterialTheme.typography.titleSmall, color = Color.White)
+            Text(text = title, style = MaterialTheme.typography.titleSmall, color = DashboardTextOnGradient)
         }
     }
 }
@@ -328,7 +340,7 @@ private fun EmptyTransactionsCard() {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2340))
+        colors = CardDefaults.cardColors(containerColor = DashboardCardSurface)
     ) {
         Column(
             modifier = Modifier
@@ -341,21 +353,21 @@ private fun EmptyTransactionsCard() {
                 modifier = Modifier
                     .size(88.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFF223554)),
+                    .background(DashboardCardSurfaceMuted),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.TrendingUp,
                     contentDescription = null,
-                    tint = Color(0xFF9CB0CC),
+                    tint = DashboardTextMuted,
                     modifier = Modifier.size(34.dp)
                 )
             }
-            Text(text = "No transactions yet", style = MaterialTheme.typography.titleMedium, color = Color(0xFFDDE7F8))
+            Text(text = "No transactions yet", style = MaterialTheme.typography.titleMedium, color = DashboardTextOnDark)
             Text(
                 text = "Start tracking your finances by adding your first transaction.",
                 style = MaterialTheme.typography.bodyLarge,
-                color = Color(0xFF9CB0CC)
+                color = DashboardTextMuted
             )
         }
     }
@@ -501,4 +513,3 @@ private fun String.toRecentIcon(): ImageVector {
 private fun Long.toRecentTime(): String {
     return SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date(this))
 }
-

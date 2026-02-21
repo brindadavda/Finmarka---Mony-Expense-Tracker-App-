@@ -59,3 +59,16 @@ val DarkColorScheme = darkColorScheme(
 
 val IncomeGreen = Color(0xFF1FA463)
 val ExpenseRed = Color(0xFFD64D63)
+
+val DashboardAccentStart = Color(0xFF1CD8A6)
+val DashboardAccentEnd = Color(0xFF3E8BFF)
+val DashboardBackgroundTop = Color(0xFF1F2D47)
+val DashboardBackgroundBottom = Color(0xFF08121F)
+val DashboardBalanceStart = Color(0xFF24C39E)
+val DashboardBalanceEnd = Color(0xFF3E7DE8)
+val DashboardCardSurface = Color(0xFF1A2340)
+val DashboardCardSurfaceAlt = Color(0xFF1E3A56)
+val DashboardCardSurfaceMuted = Color(0xFF223554)
+val DashboardTextMuted = Color(0xFF9CB0CC)
+val DashboardTextOnDark = Color(0xFFDDE7F8)
+val DashboardTextOnGradient = Color(0xFFEAF6FF)
