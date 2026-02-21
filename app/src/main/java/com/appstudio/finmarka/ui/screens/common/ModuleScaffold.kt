@@ -2,37 +2,28 @@ package com.appstudio.finmarka.ui.screens.common
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowBack
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
+import com.appstudio.finmarka.ui.components.AppCard
+import com.appstudio.finmarka.ui.components.AppListItem
+import com.appstudio.finmarka.ui.components.AppTopBar
+import com.appstudio.finmarka.ui.theme.LocalSpacing
 
 @Composable
 fun ModuleScaffold(
@@ -40,67 +31,43 @@ fun ModuleScaffold(
     subtitle: String? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val spacing = LocalSpacing.current
     Column(
         modifier = Modifier
-            .background(Brush.verticalGradient(colors = listOf(Color(0xFF1F2D47), Color(0xFF08121F))))
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
             .windowInsetsPadding(WindowInsets.statusBars)
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(spacing.lg)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        AppTopBar(title = title, navigationIcon = Icons.Outlined.ArrowBack)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = spacing.xl),
+            verticalArrangement = Arrangement.spacedBy(spacing.lg)
         ) {
-            Card(
-                shape = CircleShape,
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF1A2C4B))
-            ) {
-                Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Outlined.ArrowBack,
-                        contentDescription = null,
-                        tint = Color.White
-                    )
-                }
-            }
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            subtitle?.let {
                 Text(
-                    text = title,
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
+                    text = it,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                subtitle?.let {
-                    Text(
-                        text = it,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF9CB0CC)
-                    )
-                }
             }
+            content()
         }
-        content()
     }
 }
 
 @Composable
 fun SummaryRow(vararg items: Pair<String, String>) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    val spacing = LocalSpacing.current
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing.md)) {
         items.forEach { (label, value) ->
-            Card(
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(14.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Text(text = label, style = MaterialTheme.typography.labelMedium)
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = value,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-                    )
-                }
+            AppCard(modifier = Modifier.weight(1f)) {
+                Text(text = label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(modifier = Modifier.height(spacing.xs))
+                Text(text = value, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
             }
         }
     }
@@ -108,36 +75,20 @@ fun SummaryRow(vararg items: Pair<String, String>) {
 
 @Composable
 fun SectionCard(title: String, body: String) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = title, style = MaterialTheme.typography.titleSmall)
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = body, style = MaterialTheme.typography.bodyMedium)
-        }
+    val spacing = LocalSpacing.current
+    AppCard(modifier = Modifier.fillMaxWidth()) {
+        Text(text = title, style = MaterialTheme.typography.titleMedium)
+        Spacer(modifier = Modifier.height(spacing.sm))
+        Text(text = body, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
 @Composable
 fun BulletList(title: String, bullets: List<String>) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = title, style = MaterialTheme.typography.titleSmall)
-            Spacer(modifier = Modifier.height(8.dp))
-            bullets.forEach { item ->
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Text("•", style = MaterialTheme.typography.bodyMedium)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = item, style = MaterialTheme.typography.bodyMedium)
-                }
-            }
+    AppCard(modifier = Modifier.fillMaxWidth()) {
+        Text(text = title, style = MaterialTheme.typography.titleMedium)
+        bullets.forEach { item ->
+            AppListItem(title = item)
         }
     }
 }
