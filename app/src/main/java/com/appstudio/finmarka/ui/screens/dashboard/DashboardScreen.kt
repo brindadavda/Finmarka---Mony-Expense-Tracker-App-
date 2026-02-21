@@ -435,14 +435,14 @@ private fun RecentTransactionCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = transaction.categoryName,
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = transaction.merchantName ?: transaction.paymentMode.displayName,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -461,13 +461,13 @@ private fun RecentTransactionCard(
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     text = transaction.displayAmount(viewModel.getCurrencyCode),
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = MaterialTheme.typography.titleLarge,
                     color = if (isIncome) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
                 )
                 Spacer(modifier = Modifier.height(spacing.sm))
                 Text(
                     text = transaction.dateTime.toRecentTime(),
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -483,7 +483,7 @@ private fun TransactionTagChip(label: String) {
         label = {
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelLarge,
+                style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.secondary
             )
         },
