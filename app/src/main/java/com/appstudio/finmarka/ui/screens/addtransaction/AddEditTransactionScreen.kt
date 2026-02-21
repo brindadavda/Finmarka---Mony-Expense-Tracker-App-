@@ -16,11 +16,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.union
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -33,6 +29,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -41,6 +39,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -122,8 +121,8 @@ fun AddEditTransactionScreen(
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .windowInsetsPadding(WindowInsets.statusBars.union(WindowInsets.navigationBars)),
+            .background(MaterialTheme.colorScheme.background),
+        contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             AppActionTopBar(
                 title = if (state.isEdit) "Edit Transaction" else "Add Transaction",
@@ -160,11 +159,6 @@ fun AddEditTransactionScreen(
                 onClick = { showCategorySelector = !showCategorySelector }
             )
 
-            AccountSelectorField(
-                accountName = state.accountName,
-                onClick = onAddAccount
-            )
-
             AnimatedVisibility(
                 visible = showCategorySelector,
                 enter = fadeIn() + expandVertically(),
@@ -179,6 +173,11 @@ fun AddEditTransactionScreen(
                     }
                 )
             }
+
+            AccountSelectorField(
+                accountName = state.accountName,
+                onClick = onAddAccount
+            )
 
             DateTimeSelector(
                 dateText = formatDate(state.dateTime),
@@ -240,21 +239,71 @@ private fun AmountSection(
     onAmountChange: (String) -> Unit
 ) {
     val spacing = LocalSpacing.current
-    AppCard(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(spacing.sm)
+    val currencySymbol = when (currency) {
+        "INR" -> "₹"
+        "EUR" -> "€"
+        "GBP" -> "£"
+        else -> "$"
+    }
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(spacing.sm)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(spacing.sm)
         ) {
             Text(
-                text = "Amount",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
+                text = currencySymbol,
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            AppTextField(
+            Text(
+                text = "Amount",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.large,
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            tonalElevation = FinMarkElevation.sm
+        ) {
+            BasicTextField(
                 value = amount,
                 onValueChange = onAmountChange,
-                label = "${currency} Amount",
-                modifier = Modifier.fillMaxWidth()
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                textStyle = MaterialTheme.typography.displaySmall.copy(
+                    color = MaterialTheme.colorScheme.onSurface
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = spacing.lg, vertical = spacing.xl),
+                decorationBox = { innerTextField ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(spacing.sm)
+                    ) {
+                        Text(
+                            text = currencySymbol,
+                            style = MaterialTheme.typography.displaySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        if (amount.isBlank()) {
+                            Text(
+                                text = "0.00",
+                                style = MaterialTheme.typography.displaySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        innerTextField()
+                    }
+                }
             )
         }
     }
