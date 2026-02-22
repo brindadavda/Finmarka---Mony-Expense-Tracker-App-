@@ -1,5 +1,6 @@
 package com.appstudio.finmarka.ui.screens.budget
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,10 +16,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -27,10 +28,11 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenu
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -38,54 +40,57 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.appstudio.finmarka.domain.model.Category
+import com.appstudio.finmarka.ui.components.AppActionTopBar
+import com.appstudio.finmarka.ui.components.AppCard
 import com.appstudio.finmarka.ui.theme.FinmarkaTheme
 import com.appstudio.finmarka.ui.theme.LocalSpacing
+import com.appstudio.finmarka.ui.util.formatCurrency
+import com.appstudio.finmarka.ui.viewmodel.BudgetItemUi
+import com.appstudio.finmarka.ui.viewmodel.BudgetViewModel
 import kotlin.math.max
 
-data class Budget(
-    val name: String,
-    val limit: Double,
-    val spent: Double
-)
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BudgetScreen() {
+fun BudgetScreen(
+    onNavigateBack: () -> Unit = {},
+    viewModel: BudgetViewModel = hiltViewModel()
+) {
     val spacing = LocalSpacing.current
-    val budgets = remember {
-        mutableStateListOf(
-            Budget(name = "Food", limit = 450.0, spent = 295.0),
-            Budget(name = "Transport", limit = 220.0, spent = 160.0),
-            Budget(name = "Bills", limit = 600.0, spent = 640.0),
-            Budget(name = "Shopping", limit = 300.0, spent = 185.0)
-        )
-    }
+    val state by viewModel.uiState.collectAsState()
 
     var showAddDialog by remember { mutableStateOf(false) }
-    var newCategory by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf<Category?>(null) }
     var newLimit by remember { mutableStateOf("") }
 
-    val totalBudget = budgets.sumOf { it.limit }
-    val totalSpent = budgets.sumOf { it.spent }
+    val totalBudget = state.budgets.sumOf { it.limit }
+    val totalSpent = state.budgets.sumOf { it.spent }
     val remaining = totalBudget - totalSpent
     val totalProgress = if (totalBudget > 0.0) (totalSpent / totalBudget).toFloat() else 0f
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Budgets",
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                }
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(horizontal = spacing.xl, vertical = spacing.lg)
+            ) {
+                AppActionTopBar(
+                    title = "Budgets",
+                    onNavigationClick = onNavigateBack
+                )
+            }
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }) {
+            FloatingActionButton(
+                onClick = { showAddDialog = true },
+                containerColor = MaterialTheme.colorScheme.primary
+            ) {
                 androidx.compose.material3.Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Add budget"
@@ -97,7 +102,7 @@ fun BudgetScreen() {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentPadding = PaddingValues(spacing.lg),
+            contentPadding = PaddingValues(horizontal = spacing.xl, vertical = spacing.lg),
             verticalArrangement = Arrangement.spacedBy(spacing.lg)
         ) {
             item {
@@ -105,90 +110,137 @@ fun BudgetScreen() {
                     totalBudget = totalBudget,
                     totalSpent = totalSpent,
                     remaining = remaining,
-                    progress = totalProgress
+                    progress = totalProgress,
+                    currencyCode = viewModel.currencyCode
                 )
             }
 
-            items(items = budgets, key = { it.name }) { budget ->
-                BudgetItemCard(budget = budget)
+            items(state.budgets, key = { it.categoryId }) { budget ->
+                BudgetItemCard(
+                    budget = budget,
+                    currencyCode = viewModel.currencyCode
+                )
             }
         }
     }
 
     if (showAddDialog) {
-        AlertDialog(
-            onDismissRequest = { showAddDialog = false },
-            title = {
-                Text(
-                    text = "Add Budget",
-                    style = MaterialTheme.typography.titleMedium
-                )
+        AddBudgetDialog(
+            categories = state.availableCategories,
+            selectedCategory = selectedCategory,
+            newLimit = newLimit,
+            onCategorySelected = { selectedCategory = it },
+            onLimitChanged = { value -> newLimit = value.filter { char -> char.isDigit() || char == '.' } },
+            onDismiss = {
+                showAddDialog = false
+                selectedCategory = null
+                newLimit = ""
             },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(spacing.md)) {
-                    OutlinedTextField(
-                        value = newCategory,
-                        onValueChange = { newCategory = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        label = { Text(text = "Category") },
-                        textStyle = MaterialTheme.typography.bodyLarge,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                        )
-                    )
-                    OutlinedTextField(
-                        value = newLimit,
-                        onValueChange = { value ->
-                            newLimit = value.filter { it.isDigit() || it == '.' }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        label = { Text(text = "Budget limit") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        textStyle = MaterialTheme.typography.bodyLarge,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                        )
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        val parsedLimit = newLimit.toDoubleOrNull()
-                        if (newCategory.isNotBlank() && parsedLimit != null && parsedLimit > 0.0) {
-                            budgets.add(
-                                Budget(
-                                    name = newCategory.trim(),
-                                    limit = parsedLimit,
-                                    spent = 0.0
-                                )
-                            )
-                            newCategory = ""
-                            newLimit = ""
-                            showAddDialog = false
-                        }
-                    }
-                ) {
-                    Text(text = "Save")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        showAddDialog = false
-                        newCategory = ""
-                        newLimit = ""
-                    }
-                ) {
-                    Text(text = "Cancel")
+            onSave = {
+                val parsedLimit = newLimit.toDoubleOrNull()
+                val category = selectedCategory
+                if (category != null && parsedLimit != null && parsedLimit > 0.0) {
+                    viewModel.addBudget(categoryId = category.id, limitAmount = parsedLimit)
+                    showAddDialog = false
+                    selectedCategory = null
+                    newLimit = ""
                 }
             }
         )
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AddBudgetDialog(
+    categories: List<Category>,
+    selectedCategory: Category?,
+    newLimit: String,
+    onCategorySelected: (Category) -> Unit,
+    onLimitChanged: (String) -> Unit,
+    onDismiss: () -> Unit,
+    onSave: () -> Unit
+) {
+    val spacing = LocalSpacing.current
+    var expanded by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Add Budget",
+                style = MaterialTheme.typography.titleMedium
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(spacing.md)) {
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded }
+                ) {
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(),
+                        value = selectedCategory?.name ?: "",
+                        onValueChange = {},
+                        readOnly = true,
+                        singleLine = true,
+                        label = { Text(text = "Category") },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                        },
+                        textStyle = MaterialTheme.typography.bodyLarge,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        )
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        categories.forEach { category ->
+                            DropdownMenuItem(
+                                text = { Text(text = category.name) },
+                                onClick = {
+                                    onCategorySelected(category)
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                OutlinedTextField(
+                    value = newLimit,
+                    onValueChange = onLimitChanged,
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    label = { Text(text = "Budget limit") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    textStyle = MaterialTheme.typography.bodyLarge,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    )
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onSave,
+                enabled = selectedCategory != null && newLimit.toDoubleOrNull() != null
+            ) {
+                Text(text = "Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = "Cancel")
+            }
+        }
+    )
 }
 
 @Composable
@@ -196,18 +248,13 @@ private fun BudgetSummaryCard(
     totalBudget: Double,
     totalSpent: Double,
     remaining: Double,
-    progress: Float
+    progress: Float,
+    currencyCode: String
 ) {
     val spacing = LocalSpacing.current
-    Card(
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = spacing.xs)
-    ) {
+    AppCard {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(spacing.lg),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(spacing.lg),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -217,21 +264,21 @@ private fun BudgetSummaryCard(
             ) {
                 Text(text = "Total Budget", style = MaterialTheme.typography.labelLarge)
                 Text(
-                    text = currency(totalBudget),
+                    text = formatCurrency(totalBudget, currencyCode),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
 
                 Text(text = "Total Spent", style = MaterialTheme.typography.labelLarge)
                 Text(
-                    text = currency(totalSpent),
+                    text = formatCurrency(totalSpent, currencyCode),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Text(text = "Remaining", style = MaterialTheme.typography.labelLarge)
                 Text(
-                    text = currency(remaining),
+                    text = formatCurrency(remaining, currencyCode),
                     style = MaterialTheme.typography.titleMedium,
                     color = if (remaining < 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                 )
@@ -259,22 +306,19 @@ private fun BudgetSummaryCard(
 }
 
 @Composable
-private fun BudgetItemCard(budget: Budget) {
+private fun BudgetItemCard(
+    budget: BudgetItemUi,
+    currencyCode: String
+) {
     val spacing = LocalSpacing.current
     val remaining = budget.limit - budget.spent
     val rawProgress = if (budget.limit > 0.0) (budget.spent / budget.limit).toFloat() else 0f
     val normalizedProgress = rawProgress.coerceIn(0f, 1f)
     val isOverBudget = budget.spent > budget.limit
 
-    Card(
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = spacing.xs)
-    ) {
+    AppCard {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(spacing.lg),
+            modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(spacing.md)
         ) {
             Text(text = budget.name, style = MaterialTheme.typography.titleMedium)
@@ -283,11 +327,11 @@ private fun BudgetItemCard(budget: Budget) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                BudgetMetric(label = "Limit", value = currency(budget.limit), modifier = Modifier.weight(1f))
-                BudgetMetric(label = "Spent", value = currency(budget.spent), modifier = Modifier.weight(1f))
+                BudgetMetric(label = "Limit", value = formatCurrency(budget.limit, currencyCode), modifier = Modifier.weight(1f))
+                BudgetMetric(label = "Spent", value = formatCurrency(budget.spent, currencyCode), modifier = Modifier.weight(1f))
                 BudgetMetric(
                     label = "Remaining",
-                    value = currency(remaining),
+                    value = formatCurrency(remaining, currencyCode),
                     modifier = Modifier.weight(1f),
                     valueColor = if (remaining < 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                     textAlign = TextAlign.End
@@ -341,13 +385,17 @@ private fun BudgetMetric(
     }
 }
 
-private fun currency(amount: Double): String = "$" + String.format("%,.2f", amount)
-
 @Preview(showBackground = true)
 @Composable
 private fun BudgetScreenPreviewLight() {
     FinmarkaTheme(darkTheme = false) {
-        BudgetScreen()
+        BudgetSummaryCard(
+            totalBudget = 1200.0,
+            totalSpent = 780.0,
+            remaining = 420.0,
+            progress = 0.65f,
+            currencyCode = "USD"
+        )
     }
 }
 
@@ -355,6 +403,9 @@ private fun BudgetScreenPreviewLight() {
 @Composable
 private fun BudgetScreenPreviewDark() {
     FinmarkaTheme(darkTheme = true) {
-        BudgetScreen()
+        BudgetItemCard(
+            budget = BudgetItemUi(categoryId = 1, name = "Food", limit = 400.0, spent = 460.0),
+            currencyCode = "USD"
+        )
     }
 }
