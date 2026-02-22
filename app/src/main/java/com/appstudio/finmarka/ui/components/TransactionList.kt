@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -110,18 +111,12 @@ private fun TransactionDateHeader(date: LocalDate) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = LocalSpacing.current.sm),
-        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = title,
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onBackground
-        )
-        Text(
-            text = formatDate(date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
@@ -182,7 +177,7 @@ private fun TransactionListRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(cardBrush)
-                .padding(horizontal = spacing.md, vertical = spacing.sm),
+                .padding(horizontal = spacing.md, vertical = spacing.md),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
@@ -202,37 +197,28 @@ private fun TransactionListRow(
             }
             Spacer(modifier = Modifier.size(spacing.md))
             Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(spacing.xs)
+                modifier = Modifier
+                    .weight(1f)
+                    .wrapContentHeight(),
+                verticalArrangement = Arrangement.spacedBy(spacing.sm)
             ) {
-                Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = transaction.categoryName,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Spacer(modifier = Modifier.size(spacing.sm))
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = transaction.displayAmount(currencyCode),
-                            style = MaterialTheme.typography.titleLarge,
-                            color = transaction.displayColor
-                        )
-                        Text(
-                            text = transaction.dateTime.toTransactionListTime(),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
+                Text(
+                    text = transaction.categoryName,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
                 Row(horizontalArrangement = Arrangement.spacedBy(spacing.xs)) {
                     transaction.tagsForUi().take(2).forEach { tag ->
                         AssistChip(
                             onClick = {},
-                            label = { Text(tag) },
+                            label = {
+                                Text(
+                                    text = tag,
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            },
                             shape = MaterialTheme.shapes.small,
                             colors = AssistChipDefaults.assistChipColors(
                                 containerColor = MaterialTheme.colorScheme.surface,
@@ -241,6 +227,25 @@ private fun TransactionListRow(
                         )
                     }
                 }
+            }
+
+            Spacer(modifier = Modifier.size(spacing.md))
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.wrapContentHeight()
+            ) {
+                Text(
+                    text = transaction.displayAmount(currencyCode),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = transaction.displayColor
+                )
+                Text(
+                    text = transaction.dateTime.toTransactionListTime(),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
             if (enableDelete) {
                 IconButton(onClick = { showDeleteDialog = true }) {
