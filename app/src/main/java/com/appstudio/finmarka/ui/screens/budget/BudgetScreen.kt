@@ -2,6 +2,7 @@ package com.appstudio.finmarka.ui.screens.budget
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,7 +16,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AlertDialog
@@ -23,10 +26,10 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenu
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -42,19 +45,26 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.text.input.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.appstudio.finmarka.domain.model.Category
 import com.appstudio.finmarka.ui.components.AppActionTopBar
 import com.appstudio.finmarka.ui.components.AppCard
+import com.appstudio.finmarka.ui.screens.dashboard.MetricPill
+import com.appstudio.finmarka.ui.theme.DashboardAccentEnd
+import com.appstudio.finmarka.ui.theme.DashboardAccentStart
+import com.appstudio.finmarka.ui.theme.DashboardBalanceEnd
+import com.appstudio.finmarka.ui.theme.DashboardBalanceStart
 import com.appstudio.finmarka.ui.theme.DashboardTextOnGradient
 import com.appstudio.finmarka.ui.theme.FinmarkaTheme
 import com.appstudio.finmarka.ui.theme.LocalSpacing
@@ -83,6 +93,13 @@ fun BudgetScreen(
     val totalSpent = state.budgets.sumOf { it.spent }
     val remaining = totalBudget - totalSpent
 
+    val accentBrush = Brush.linearGradient(
+        colors = listOf(
+            DashboardAccentStart,
+            DashboardAccentEnd
+        )
+    )
+
     Scaffold(
         topBar = {
             Column(
@@ -97,10 +114,10 @@ fun BudgetScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showAddDialog = true },
-                containerColor = DashboardTextOnGradient,
-                contentColor = MaterialTheme.colorScheme.primary
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = DashboardTextOnGradient
             ) {
-                androidx.compose.material3.Icon(
+                Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Add budget"
                 )
@@ -221,35 +238,44 @@ private fun BudgetMetricsRow(
     currencyCode: String
 ) {
     val spacing = LocalSpacing.current
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(spacing.sm)
-    ) {
-        MetricPill(Modifier.weight(1f), title = "Budget", value = formatCurrency(totalBudget, currencyCode))
-        MetricPill(Modifier.weight(1f), title = "Spent", value = formatCurrency(totalSpent, currencyCode))
-        MetricPill(Modifier.weight(1f), title = "Remaining", value = formatCurrency(remaining, currencyCode))
-    }
-}
 
-@Composable
-private fun MetricPill(
-    modifier: Modifier,
-    title: String,
-    value: String,
-    tint: Color = DashboardTextOnGradient
-) {
-    val spacing = LocalSpacing.current
+    val accentBrush = Brush.linearGradient(
+        colors = listOf(
+            DashboardAccentStart,
+            DashboardAccentEnd
+        )
+    )
+
     Card(
-        modifier = modifier,
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = tint)
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(spacing.md),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0f))
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = spacing.md, vertical = spacing.sm),
-            verticalArrangement = Arrangement.spacedBy(spacing.xs)
+        Box(
+            modifier = Modifier
+                .background(accentBrush)
+                .padding(spacing.lg)
         ) {
-            Text(text = title, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface)
-            Text(text = value, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(spacing.sm)
+            ) {
+                MetricPill(
+                    Modifier.weight(1f),
+                    title = "Budget",
+                    value = formatCurrency(totalBudget, currencyCode)
+                )
+                MetricPill(
+                    Modifier.weight(1f),
+                    title = "Spent",
+                    value = formatCurrency(totalSpent, currencyCode)
+                )
+                MetricPill(
+                    Modifier.weight(1f),
+                    title = "Remaining",
+                    value = formatCurrency(remaining, currencyCode)
+                )
+            }
         }
     }
 }
@@ -487,8 +513,7 @@ private fun BudgetItemCard(
                     label = "Remaining",
                     value = formatCurrency(remaining, currencyCode),
                     modifier = Modifier.weight(1f),
-                    valueColor = if (remaining < 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                    textAlign = TextAlign.End
+                    valueColor = if (remaining < 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                 )
             }
 
