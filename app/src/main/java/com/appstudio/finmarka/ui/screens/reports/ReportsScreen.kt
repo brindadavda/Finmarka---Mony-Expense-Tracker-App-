@@ -32,7 +32,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.appstudio.finmarka.data.model.ReportItem
 import com.appstudio.finmarka.data.model.TransactionType
@@ -46,7 +48,7 @@ import com.appstudio.finmarka.ui.theme.LocalSpacing
 import com.appstudio.finmarka.ui.viewmodel.ReportsViewModel
 import java.util.Calendar
 
-enum class StatsFilter { TODAY, WEEK, MONTH, YEAR }
+enum class StatsFilter { WEEK, MONTH, YEAR }
 
 @Composable
 fun ReportsScreen(
@@ -56,7 +58,7 @@ fun ReportsScreen(
     val state by viewModel.uiState.collectAsState()
     val spacing = LocalSpacing.current
     val context = LocalContext.current
-    var selectedFilter by remember { mutableStateOf(StatsFilter.MONTH) }
+    var selectedFilter by remember { mutableStateOf(StatsFilter.WEEK) }
 
     val filteredTransactions = remember(state.transactions, selectedFilter) {
         filterTransactions(state.transactions, selectedFilter)
@@ -81,6 +83,15 @@ fun ReportsScreen(
     val chartData = remember(state.transactions, selectedFilter) {
         buildChartData(state.transactions, selectedFilter)
     }
+
+    val currentCalendar = remember { Calendar.getInstance() }
+    val currentMonthLabel = remember {
+        listOf(
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        )[currentCalendar.get(Calendar.MONTH)]
+    }
+    val currentYearLabel = remember { currentCalendar.get(Calendar.YEAR).toString() }
 
     Column(
         modifier = Modifier
@@ -113,9 +124,9 @@ fun ReportsScreen(
         }
 
         Text(
-            text = "Filter by period",
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            text = "Statistics Report",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface
         )
 
         Row(
@@ -124,19 +135,41 @@ fun ReportsScreen(
         ) {
             StatsFilter.values().forEach { filter ->
                 FilterChip(
+                    modifier = Modifier
+                        .then(
+                            if (selectedFilter == filter) Modifier
+                            else Modifier.background(
+                                color = Color.Transparent,
+                                shape = MaterialTheme.shapes.small
+                            )
+                        ),
                     selected = selectedFilter == filter,
                     onClick = { selectedFilter = filter },
-                    label = { Text(filter.name.lowercase().replaceFirstChar { it.uppercase() }) },
+                    label = {
+                        Text(
+                            filter.name.lowercase().replaceFirstChar { it.uppercase() },
+                            color = if (selectedFilter == filter) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
                     colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
-                        selectedLabelColor = MaterialTheme.colorScheme.primary
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = Color.White,
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    ),
+                    border = androidx.compose.foundation.BorderStroke(
+                        width = 1.dp,
+                        color = if (selectedFilter == filter) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
                     )
                 )
             }
         }
 
-        Text(text = "📊 Statistics Report", style = MaterialTheme.typography.titleMedium)
-        BarChart(data = chartData)
+        BarChart(
+            data = chartData,
+            filter = selectedFilter,
+            highlightLabel = if (selectedFilter == StatsFilter.MONTH) currentMonthLabel else if (selectedFilter == StatsFilter.YEAR) currentYearLabel else null
+        )
 
         Text(text = "Export Reports", style = MaterialTheme.typography.titleMedium)
         Row(
@@ -180,10 +213,6 @@ private fun filterTransactions(transactions: List<Transaction>, filter: StatsFil
     return transactions.filter { transaction ->
         val tx = Calendar.getInstance().apply { timeInMillis = transaction.dateTime }
         when (filter) {
-            StatsFilter.TODAY ->
-                tx.get(Calendar.YEAR) == now.get(Calendar.YEAR) &&
-                    tx.get(Calendar.DAY_OF_YEAR) == now.get(Calendar.DAY_OF_YEAR)
-
             StatsFilter.WEEK -> {
                 val startOfWeek = (now.clone() as Calendar).apply {
                     firstDayOfWeek = Calendar.MONDAY
@@ -216,7 +245,6 @@ private fun buildChartData(
     val grouped = mutableMapOf<String, Float>()
 
     val labels = when (filter) {
-        StatsFilter.TODAY -> (0..23).map { hour -> String.format("%02d:00-%02d:00", hour, (hour + 1) % 24) }
         StatsFilter.WEEK -> listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
         StatsFilter.MONTH -> listOf(
             "January", "February", "March", "April", "May", "June",
@@ -228,15 +256,6 @@ private fun buildChartData(
     transactions.forEach { transaction ->
         val calendar = Calendar.getInstance().apply { timeInMillis = transaction.dateTime }
         val key = when (filter) {
-            StatsFilter.TODAY -> {
-                if (calendar.get(Calendar.YEAR) == now.get(Calendar.YEAR) &&
-                    calendar.get(Calendar.DAY_OF_YEAR) == now.get(Calendar.DAY_OF_YEAR)
-                ) {
-                    val hour = calendar.get(Calendar.HOUR_OF_DAY)
-                    String.format("%02d:00-%02d:00", hour, (hour + 1) % 24)
-                } else null
-            }
-
             StatsFilter.WEEK -> {
                 val startOfWeek = (now.clone() as Calendar).apply {
                     firstDayOfWeek = Calendar.MONDAY
