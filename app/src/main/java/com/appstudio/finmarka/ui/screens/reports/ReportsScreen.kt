@@ -78,6 +78,10 @@ fun ReportsScreen(
         }
     }
 
+    val chartData = remember(filteredTransactions, selectedFilter) {
+        buildChartData(filteredTransactions, selectedFilter)
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -132,7 +136,7 @@ fun ReportsScreen(
         }
 
         Text(text = "Statistics", style = MaterialTheme.typography.titleMedium)
-        BarChart(data = reportData)
+        BarChart(data = chartData)
 
         Text(text = "Export Reports", style = MaterialTheme.typography.titleMedium)
         Row(
@@ -192,6 +196,36 @@ private fun filterTransactions(transactions: List<Transaction>, filter: StatsFil
             StatsFilter.ALL -> true
         }
     }
+}
+
+
+private fun buildChartData(
+    transactions: List<Transaction>,
+    filter: StatsFilter
+): List<ReportItem> {
+    val grouped = mutableMapOf<String, Float>()
+
+    transactions.forEach { transaction ->
+        val calendar = Calendar.getInstance().apply { timeInMillis = transaction.dateTime }
+        val key = when (filter) {
+            StatsFilter.TODAY -> String.format("%02d:00", calendar.get(Calendar.HOUR_OF_DAY))
+            StatsFilter.WEEK -> calendar.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.SHORT, java.util.Locale.getDefault()) ?: "Day"
+            StatsFilter.MONTH -> "W${(calendar.get(Calendar.DAY_OF_MONTH) - 1) / 7 + 1}"
+            StatsFilter.YEAR -> calendar.getDisplayName(Calendar.MONTH, Calendar.SHORT, java.util.Locale.getDefault()) ?: "Month"
+            StatsFilter.ALL -> calendar.get(Calendar.YEAR).toString()
+        }
+        grouped[key] = (grouped[key] ?: 0f) + transaction.amount.toFloat()
+    }
+
+    val orderedKeys = when (filter) {
+        StatsFilter.TODAY -> grouped.keys.sorted()
+        StatsFilter.WEEK -> listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat").filter { it in grouped.keys }
+        StatsFilter.MONTH -> grouped.keys.sortedBy { it.removePrefix("W").toIntOrNull() ?: 0 }
+        StatsFilter.YEAR -> listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec").filter { it in grouped.keys }
+        StatsFilter.ALL -> grouped.keys.sorted()
+    }
+
+    return orderedKeys.map { ReportItem(label = it, amount = grouped[it] ?: 0f) }
 }
 
 @Composable
