@@ -275,7 +275,9 @@ private fun MainScreen(
                 onNavigateBack = { navControllerInner.popBackStack() }
             )
         }
-        composable("budget") { BudgetScreen() }
+        composable("budget") {
+            BudgetScreen(onNavigateBack = { navControllerInner.popBackStack() })
+        }
         composable("templates") { TemplatesScreen() }
         composable("accounts") {
             AccountsListScreen(

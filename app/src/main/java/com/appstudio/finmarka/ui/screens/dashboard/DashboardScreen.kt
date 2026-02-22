@@ -355,7 +355,7 @@ private fun EmptyTransactionsCard() {
 }
 
 @Composable
-private fun MetricPill(
+fun MetricPill(
     modifier: Modifier,
     title: String,
     value: String,
