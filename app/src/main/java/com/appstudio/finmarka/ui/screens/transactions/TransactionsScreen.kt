@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,6 +19,7 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -172,14 +172,13 @@ fun TransactionsScreen(
             }
         }
 
-        FlowRow(
+        LazyRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = spacing.md),
-            horizontalArrangement = Arrangement.spacedBy(spacing.sm),
-            verticalArrangement = Arrangement.spacedBy(spacing.sm)
+            horizontalArrangement = Arrangement.spacedBy(spacing.sm)
         ) {
-            TransactionsTab.entries.forEach { tab ->
+            items(TransactionsTab.entries) { tab ->
                 FilterChip(
                     selected = selectedTab == tab,
                     onClick = { selectedTab = tab },
@@ -448,16 +447,17 @@ private fun FilterBottomSheet(
             }
 
             Text("Category", style = MaterialTheme.typography.titleMedium)
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(spacing.sm),
-                verticalArrangement = Arrangement.spacedBy(spacing.sm)
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(spacing.sm)
             ) {
-                FilterChip(
-                    selected = tempCategoryId == -1,
-                    onClick = { tempCategoryId = -1 },
-                    label = { Text("All") }
-                )
-                categories.forEach { (id, name) ->
+                item {
+                    FilterChip(
+                        selected = tempCategoryId == -1,
+                        onClick = { tempCategoryId = -1 },
+                        label = { Text("All") }
+                    )
+                }
+                items(categories) { (id, name) ->
                     FilterChip(
                         selected = tempCategoryId == id,
                         onClick = { tempCategoryId = id },
