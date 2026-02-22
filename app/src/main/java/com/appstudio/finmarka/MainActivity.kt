@@ -256,7 +256,8 @@ private fun MainScreen(
         }
         composable("transactions") {
             TransactionsScreen(
-                onTransactionClick = { id -> navController.navigate("edit_transaction/$id") }
+                onTransactionClick = { id -> navController.navigate("edit_transaction/$id") },
+                onNavigateBack = { navControllerInner.popBackStack() }
             )
         }
         composable("reports") {
