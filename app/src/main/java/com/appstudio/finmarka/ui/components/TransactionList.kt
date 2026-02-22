@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.NorthEast
 import androidx.compose.material.icons.filled.SouthWest
 import androidx.compose.material3.AlertDialog
@@ -38,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import com.appstudio.finmarka.data.model.TransactionType
 import com.appstudio.finmarka.domain.model.Transaction
@@ -177,7 +179,7 @@ private fun TransactionListRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(cardBrush)
-                .padding(horizontal = spacing.md, vertical = spacing.md),
+                .padding(horizontal = spacing.sm, vertical = spacing.sm),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
@@ -233,7 +235,7 @@ private fun TransactionListRow(
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
+                verticalArrangement = Arrangement.spacedBy(spacing.md),
                 modifier = Modifier.wrapContentHeight()
             ) {
                 Text(

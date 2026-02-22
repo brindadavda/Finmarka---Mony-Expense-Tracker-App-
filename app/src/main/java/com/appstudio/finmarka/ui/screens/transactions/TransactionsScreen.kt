@@ -133,9 +133,18 @@ fun TransactionsScreen(
                 contentPadding = PaddingValues(horizontal = spacing.md, vertical = spacing.md),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
             ) {
-                Icon(imageVector = Icons.Default.FilterList, contentDescription = null)
+                Icon(
+                    imageVector = Icons.Default.FilterList,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
                 Spacer(modifier = Modifier.size(spacing.xs))
-                Text("Filter")
+                Text(
+                    text = "Filter",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
             }
         }
 
