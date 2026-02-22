@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.NorthEast
 import androidx.compose.material.icons.filled.SouthWest
 import androidx.compose.material3.AlertDialog
@@ -47,7 +46,9 @@ import com.appstudio.finmarka.ui.theme.DashboardCardSurface
 import com.appstudio.finmarka.ui.theme.FinMarkElevation
 import com.appstudio.finmarka.ui.theme.LocalSpacing
 import com.appstudio.finmarka.ui.util.formatDate
-import com.appstudio.finmarka.ui.util.formatDateTimeTravel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -214,19 +215,19 @@ private fun TransactionListRow(
                         modifier = Modifier.weight(1f)
                     )
                     Spacer(modifier = Modifier.size(spacing.sm))
-                    Text(
-                        text = transaction.displayAmount(currencyCode),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = transaction.displayColor
-                    )
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = transaction.displayAmount(currencyCode),
+                            style = MaterialTheme.typography.titleLarge,
+                            color = transaction.displayColor
+                        )
+                        Text(
+                            text = transaction.dateTime.toTransactionListTime(),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
-                Text(
-                    text = "${transaction.paymentMode.name.lowercase().replaceFirstChar { it.titlecase() }} · ${formatDateTimeTravel(transaction.dateTime)}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
                 Row(horizontalArrangement = Arrangement.spacedBy(spacing.xs)) {
                     transaction.tagsForUi().take(2).forEach { tag ->
                         AssistChip(
@@ -244,8 +245,8 @@ private fun TransactionListRow(
             if (enableDelete) {
                 IconButton(onClick = { showDeleteDialog = true }) {
                     Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = "Options",
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -261,3 +262,7 @@ private fun Transaction.tagsForUi(): List<String> = buildList {
     if (isTemplate) add("Template")
     if (isExcluded) add("Excluded")
 }
+
+
+private fun Long.toTransactionListTime(): String =
+    SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date(this))
