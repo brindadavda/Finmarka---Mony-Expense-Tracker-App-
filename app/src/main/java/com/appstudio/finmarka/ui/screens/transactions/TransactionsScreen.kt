@@ -1,5 +1,7 @@
 package com.appstudio.finmarka.ui.screens.transactions
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -60,10 +63,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.appstudio.finmarka.data.model.TransactionStatus
 import com.appstudio.finmarka.data.model.TransactionType
 import com.appstudio.finmarka.domain.model.Transaction
+import com.appstudio.finmarka.ui.components.AppActionTopBar
 import com.appstudio.finmarka.ui.theme.DashboardAccentEnd
 import com.appstudio.finmarka.ui.theme.DashboardAccentStart
 import com.appstudio.finmarka.ui.theme.DashboardCardSurface
@@ -85,10 +90,12 @@ private enum class TransactionsTab(val title: String) {
     PENDING("Pending")
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionsScreen(
     onTransactionClick: (Int) -> Unit,
+    onNavigateBack: () -> Unit,
     viewModel: TransactionsViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -112,30 +119,15 @@ fun TransactionsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.statusBars.union(WindowInsets.navigationBars))
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = spacing.lg)
+            .windowInsetsPadding(WindowInsets.statusBars)
+            .padding(horizontal = spacing.xl, vertical = spacing.lg),
+        verticalArrangement = Arrangement.spacedBy(spacing.lg)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = spacing.md, bottom = spacing.sm),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = "All Transactions",
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-            IconButton(onClick = { showFilterSheet = true }) {
-                Icon(
-                    imageVector = Icons.Default.FilterList,
-                    contentDescription = "Filter",
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
+        AppActionTopBar(
+            title = "All Transactions",
+            onNavigationClick = onNavigateBack
+        )
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -220,6 +212,7 @@ fun TransactionsScreen(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun TransactionsList(
     transactions: List<Transaction>,
@@ -284,6 +277,7 @@ private fun TransactionsList(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun DateHeader(date: LocalDate) {
     val today = LocalDate.now()
