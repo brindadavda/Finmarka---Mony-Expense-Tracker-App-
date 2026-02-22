@@ -1,5 +1,7 @@
 package com.appstudio.finmarka.ui.screens.reports
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -19,8 +21,6 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -42,7 +42,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,10 +58,8 @@ import com.appstudio.finmarka.ui.components.AppActionTopBar
 import com.appstudio.finmarka.ui.theme.LocalSpacing
 import com.appstudio.finmarka.ui.viewmodel.ReportsViewModel
 import java.util.Calendar
-import kotlinx.coroutines.launch
 
 private enum class ReportFilter(val title: String) { WEEK("Week"), MONTH("Month"), YEAR("Year") }
-
 private data class ChartPoint(val label: String, val value: Int)
 
 @Composable
@@ -75,10 +72,26 @@ fun ReportsScreen(
     val context = androidx.compose.ui.platform.LocalContext.current
 
     val filters = remember { listOf(ReportFilter.WEEK, ReportFilter.MONTH, ReportFilter.YEAR) }
-    val pagerState = rememberPagerState(pageCount = { filters.size }, initialPage = 0)
+    var selectedFilter by rememberSaveable { mutableStateOf(ReportFilter.WEEK) }
 
-    val selectedFilter = filters[pagerState.currentPage]
-    val scope = rememberCoroutineScope()
+    val filteredTransactions = remember(state.transactions, selectedFilter) {
+        filterTransactionsForExport(state.transactions, selectedFilter)
+    }
+
+    val totalIncome = filteredTransactions.filter { it.type.name == "INCOME" }.sumOf { it.amount }
+    val totalExpense = filteredTransactions.filter { it.type.name == "EXPENSE" }.sumOf { it.amount }
+
+    val chartData = remember(state.transactions, selectedFilter) {
+        val points = buildChartData(state.transactions, selectedFilter)
+        if (filteredTransactions.isEmpty()) defaultChartData(selectedFilter) else points
+    }
+
+    val reportData = filteredTransactions.map {
+        ReportItem(
+            label = "${it.categoryName} (${it.type.name})",
+            amount = it.amount.toFloat()
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -93,47 +106,30 @@ fun ReportsScreen(
         FilterTabs(
             filters = filters,
             selected = selectedFilter,
-            onSelect = { filter ->
-                val page = filters.indexOf(filter)
-                if (page >= 0) scope.launch { pagerState.animateScrollToPage(page) }
-            }
+            onSelect = { selectedFilter = it }
         )
 
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-        ) { page ->
-            val pageFilter = filters[page]
-            val pageChartData = remember(state.transactions, pageFilter) {
-                buildChartData(state.transactions, pageFilter)
-            }
-            val pageTransactions = remember(state.transactions, pageFilter) {
-                filterTransactionsForExport(state.transactions, pageFilter)
-            }
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = spacing.lg),
-                verticalArrangement = Arrangement.spacedBy(spacing.lg)
-            ) {
-                CountBarChart(data = pageChartData, filter = pageFilter)
-
-                ExportSection(
-                    context = context,
-                    totalIncome = pageTransactions.filter { it.type.name == "INCOME" }.sumOf { it.amount },
-                    totalExpense = pageTransactions.filter { it.type.name == "EXPENSE" }.sumOf { it.amount },
-                    reportData = pageTransactions.map {
-                        ReportItem(
-                            label = "${it.categoryName} (${it.type.name})",
-                            amount = it.amount.toFloat()
-                        )
-                    }
-                )
-            }
+        Crossfade(
+            targetState = selectedFilter,
+            animationSpec = tween(durationMillis = 300),
+            modifier = Modifier.padding(top = 0.dp),
+            label = "chartFilterAnimation"
+        ) {
+            CountBarChart(
+                data = chartData,
+                filter = it,
+                showingDefault = filteredTransactions.isEmpty()
+            )
         }
+
+        Spacer(modifier = Modifier.height(spacing.lg))
+
+        ExportSection(
+            context = context,
+            totalIncome = totalIncome,
+            totalExpense = totalExpense,
+            reportData = reportData
+        )
     }
 }
 
@@ -166,14 +162,13 @@ private fun FilterTabs(
 }
 
 @Composable
-private fun CountBarChart(data: List<ChartPoint>, filter: ReportFilter) {
+private fun CountBarChart(data: List<ChartPoint>, filter: ReportFilter, showingDefault: Boolean) {
     val spacing = LocalSpacing.current
     var selectedPoint by remember { mutableStateOf<ChartPoint?>(null) }
     var highlightedIndex by rememberSaveable { mutableIntStateOf(-1) }
 
-    val maxData = (data.maxOfOrNull { it.value } ?: 0).coerceAtLeast(100)
-    val yMax = ((maxData + 99) / 100) * 100
-    val ySteps = (0..yMax step 100).toList()
+    val ySteps = (0..1000 step 100).toList()
+    val yMax = 1000
 
     Card(
         shape = RoundedCornerShape(20.dp),
@@ -284,9 +279,9 @@ private fun CountBarChart(data: List<ChartPoint>, filter: ReportFilter) {
                 }
             }
 
-            if (data.all { it.value == 0 }) {
+            if (showingDefault) {
                 Text(
-                    text = "No data for selected period",
+                    text = "No transactions yet — showing sample distribution",
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.bodyMedium,
@@ -322,7 +317,7 @@ private fun ChartBar(
     onLongPress: () -> Unit
 ) {
     val barRatio = if (yMax == 0) 0f else point.value.toFloat() / yMax.toFloat()
-    val animatedRatio by androidx.compose.animation.core.animateFloatAsState(
+    val animatedRatio by animateFloatAsState(
         targetValue = barRatio,
         animationSpec = tween(durationMillis = 300),
         label = "barAnimation"
@@ -336,22 +331,20 @@ private fun ChartBar(
         else -> Color(0xFF7C4DFF)
     }
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Box(
+        modifier = Modifier
+            .height(220.dp)
+            .width(barWidth)
+            .combinedClickable(onClick = onTap, onLongClick = onLongPress),
+        contentAlignment = Alignment.BottomCenter
+    ) {
         Box(
             modifier = Modifier
-                .height(220.dp)
-                .width(barWidth)
-                .combinedClickable(onClick = onTap, onLongClick = onLongPress),
-            contentAlignment = Alignment.BottomCenter
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height((220.dp * animatedRatio).coerceAtLeast(0.dp))
-                    .clip(RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
-                    .background(if (isHighlighted) fillColor.copy(alpha = 0.8f) else fillColor)
-            )
-        }
+                .fillMaxWidth()
+                .height((220.dp * animatedRatio).coerceAtLeast(0.dp))
+                .clip(RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
+                .background(if (isHighlighted) fillColor.copy(alpha = 0.8f) else fillColor)
+        )
     }
 }
 
@@ -509,5 +502,18 @@ private fun buildChartData(transactions: List<Transaction>, filter: ReportFilter
                 ChartPoint(year.toString().takeLast(2), count)
             }
         }
+    }
+}
+
+private fun defaultChartData(filter: ReportFilter): List<ChartPoint> = when (filter) {
+    ReportFilter.WEEK -> listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+        .mapIndexed { idx, label -> ChartPoint(label, (idx + 1) * 20) }
+
+    ReportFilter.MONTH -> listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+        .mapIndexed { idx, label -> ChartPoint(label, (idx % 5 + 1) * 30) }
+
+    ReportFilter.YEAR -> {
+        val nowYear = Calendar.getInstance().get(Calendar.YEAR)
+        (2020..nowYear).mapIndexed { idx, year -> ChartPoint(year.toString().takeLast(2), (idx % 6 + 1) * 25) }
     }
 }
