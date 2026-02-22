@@ -3,7 +3,6 @@ package com.appstudio.finmarka.ui.screens.dashboard
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,7 +24,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BarChart
@@ -46,7 +44,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -63,7 +60,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.appstudio.finmarka.R
-import com.appstudio.finmarka.data.model.TransactionType
 import com.appstudio.finmarka.domain.model.Transaction
 import com.appstudio.finmarka.ui.theme.DashboardAccentEnd
 import com.appstudio.finmarka.ui.theme.DashboardAccentStart
@@ -77,10 +73,8 @@ import com.appstudio.finmarka.ui.theme.DashboardTextOnDark
 import com.appstudio.finmarka.ui.theme.DashboardTextOnGradient
 import com.appstudio.finmarka.ui.theme.FinMarkElevation
 import com.appstudio.finmarka.ui.theme.LocalSpacing
+import com.appstudio.finmarka.ui.components.transactionListItems
 import com.appstudio.finmarka.ui.viewmodel.DashboardViewModel
-import com.appstudio.finmarka.ui.viewmodel.TransactionsViewModel
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.time.LocalDate
 import java.time.ZoneId
 import java.util.Locale
@@ -232,16 +226,13 @@ fun DashboardScreen(
             if (recentItems.isEmpty()) {
                 item { EmptyTransactionsCard() }
             } else {
-                items(
-                    items = recentItems,
-                    key = { it.id },
-                    contentType = { "recent_transaction" }
-                ) { transaction ->
-                    RecentTransactionCard(
-                        transaction = transaction,
-                        onClick = { onTransactionClick(transaction.id) }
-                    )
-                }
+                transactionListItems(
+                    transactions = recentItems,
+                    currencyCode = viewModel.getCurrencyCode,
+                    onTransactionClick = onTransactionClick,
+                    showSections = false,
+                    enableDelete = false
+                )
             }
         }
 
@@ -383,137 +374,4 @@ private fun MetricPill(
     }
 }
 
-@Composable
-private fun RecentTransactionCard(
-    transaction: Transaction,
-    onClick: () -> Unit,
-    viewModel: TransactionsViewModel = hiltViewModel()
-) {
-    val spacing = LocalSpacing.current
-    val isIncome = transaction.type == TransactionType.INCOME
-    val typeColor = if (isIncome) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
-    val cardShape = MaterialTheme.shapes.extraLarge
 
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = cardShape,
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        border = BorderStroke(1.dp, typeColor.copy(alpha = 0.22f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = FinMarkElevation.sm)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.surface,
-                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
-                        )
-                    ),
-                    shape = cardShape
-                )
-                .padding(spacing.lg),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(spacing.xxxl + spacing.sm)
-                    .clip(RoundedCornerShape(spacing.md))
-                    .background(typeColor.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = transaction.categoryName.toRecentIcon(),
-                    contentDescription = transaction.categoryName,
-                    tint = typeColor
-                )
-            }
-
-            Spacer(modifier = Modifier.size(spacing.sm))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = transaction.categoryName,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-//                Text(
-//                    text = transaction.paymentMode.displayName,
-//                    style = MaterialTheme.typography.bodyMedium,
-//                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-//                    maxLines = 1,
-//                    overflow = TextOverflow.Ellipsis
-//                )
-
-//                Spacer(modifier = Modifier.height(spacing.sm))
-
-                Row(horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-                    TransactionTagChip(label = transaction.accountName)
-//                    transaction.note
-//                        ?.takeIf { it.isNotBlank() }
-//                        ?.let { TransactionTagChip(label = it.take(10)) }
-                }
-            }
-
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    text = transaction.displayAmount(viewModel.getCurrencyCode),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = typeColor
-                )
-                Spacer(modifier = Modifier.height(spacing.xs))
-                Text(
-                    text = transaction.dateTime.toRecentTime(),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun TransactionTagChip(label: String) {
-    val spacing = LocalSpacing.current
-
-    Surface(
-        shape = RoundedCornerShape(10.dp),
-        color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f),
-        modifier = Modifier.border(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f),
-            shape = RoundedCornerShape(10.dp)
-        )
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.secondary,
-            modifier = Modifier.padding(horizontal = spacing.sm, vertical = 6.dp),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
-}
-
-
-private fun String.toRecentIcon(): ImageVector {
-    val label = lowercase(Locale.getDefault())
-    return when {
-        "food" in label || "dining" in label || "coffee" in label -> Icons.Default.Fastfood
-        "shop" in label || "amazon" in label || "buy" in label -> Icons.Default.ShoppingBag
-        "transport" in label || "fuel" in label || "car" in label -> Icons.Default.DirectionsCar
-        "salary" in label || "work" in label -> Icons.Default.Work
-        "freelance" in label || "design" in label || "tech" in label -> Icons.Default.Laptop
-        else -> Icons.Default.CardGiftcard
-    }
-}
-
-private fun Long.toRecentTime(): String {
-    return SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date(this))
-}
