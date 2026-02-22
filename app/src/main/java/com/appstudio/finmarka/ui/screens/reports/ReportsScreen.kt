@@ -46,7 +46,7 @@ import com.appstudio.finmarka.ui.theme.LocalSpacing
 import com.appstudio.finmarka.ui.viewmodel.ReportsViewModel
 import java.util.Calendar
 
-enum class StatsFilter { TODAY, WEEK, MONTH, YEAR, ALL }
+enum class StatsFilter { TODAY, WEEK, MONTH, YEAR }
 
 @Composable
 fun ReportsScreen(
@@ -78,8 +78,8 @@ fun ReportsScreen(
         }
     }
 
-    val chartData = remember(filteredTransactions, selectedFilter) {
-        buildChartData(filteredTransactions, selectedFilter)
+    val chartData = remember(state.transactions, selectedFilter) {
+        buildChartData(state.transactions, selectedFilter)
     }
 
     Column(
@@ -176,6 +176,7 @@ fun ReportsScreen(
 
 private fun filterTransactions(transactions: List<Transaction>, filter: StatsFilter): List<Transaction> {
     val now = Calendar.getInstance()
+
     return transactions.filter { transaction ->
         val tx = Calendar.getInstance().apply { timeInMillis = transaction.dateTime }
         when (filter) {
@@ -184,49 +185,114 @@ private fun filterTransactions(transactions: List<Transaction>, filter: StatsFil
                     tx.get(Calendar.DAY_OF_YEAR) == now.get(Calendar.DAY_OF_YEAR)
 
             StatsFilter.WEEK -> {
-                val diffDays = ((now.timeInMillis - tx.timeInMillis) / (1000L * 60L * 60L * 24L)).toInt()
-                diffDays in 0..6
+                val startOfWeek = (now.clone() as Calendar).apply {
+                    firstDayOfWeek = Calendar.MONDAY
+                    set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }
+                val endOfWeek = (startOfWeek.clone() as Calendar).apply {
+                    add(Calendar.DAY_OF_MONTH, 7)
+                }
+                tx.timeInMillis >= startOfWeek.timeInMillis && tx.timeInMillis < endOfWeek.timeInMillis
             }
 
-            StatsFilter.MONTH ->
-                tx.get(Calendar.YEAR) == now.get(Calendar.YEAR) &&
-                    tx.get(Calendar.MONTH) == now.get(Calendar.MONTH)
+            StatsFilter.MONTH -> tx.get(Calendar.YEAR) == now.get(Calendar.YEAR)
 
-            StatsFilter.YEAR -> tx.get(Calendar.YEAR) == now.get(Calendar.YEAR)
-            StatsFilter.ALL -> true
+            StatsFilter.YEAR -> tx.get(Calendar.YEAR) in 2020..now.get(Calendar.YEAR)
         }
     }
 }
+
 
 
 private fun buildChartData(
     transactions: List<Transaction>,
     filter: StatsFilter
 ): List<ReportItem> {
+    val now = Calendar.getInstance()
     val grouped = mutableMapOf<String, Float>()
+
+    val labels = when (filter) {
+        StatsFilter.TODAY -> (0..23).map { hour -> String.format("%02d:00-%02d:00", hour, (hour + 1) % 24) }
+        StatsFilter.WEEK -> listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+        StatsFilter.MONTH -> listOf(
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        )
+        StatsFilter.YEAR -> (2020..now.get(Calendar.YEAR)).map { it.toString() }
+    }
 
     transactions.forEach { transaction ->
         val calendar = Calendar.getInstance().apply { timeInMillis = transaction.dateTime }
         val key = when (filter) {
-            StatsFilter.TODAY -> String.format("%02d:00", calendar.get(Calendar.HOUR_OF_DAY))
-            StatsFilter.WEEK -> calendar.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.SHORT, java.util.Locale.getDefault()) ?: "Day"
-            StatsFilter.MONTH -> "W${(calendar.get(Calendar.DAY_OF_MONTH) - 1) / 7 + 1}"
-            StatsFilter.YEAR -> calendar.getDisplayName(Calendar.MONTH, Calendar.SHORT, java.util.Locale.getDefault()) ?: "Month"
-            StatsFilter.ALL -> calendar.get(Calendar.YEAR).toString()
+            StatsFilter.TODAY -> {
+                if (calendar.get(Calendar.YEAR) == now.get(Calendar.YEAR) &&
+                    calendar.get(Calendar.DAY_OF_YEAR) == now.get(Calendar.DAY_OF_YEAR)
+                ) {
+                    val hour = calendar.get(Calendar.HOUR_OF_DAY)
+                    String.format("%02d:00-%02d:00", hour, (hour + 1) % 24)
+                } else null
+            }
+
+            StatsFilter.WEEK -> {
+                val startOfWeek = (now.clone() as Calendar).apply {
+                    firstDayOfWeek = Calendar.MONDAY
+                    set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }
+                val endOfWeek = (startOfWeek.clone() as Calendar).apply { add(Calendar.DAY_OF_MONTH, 7) }
+                if (calendar.timeInMillis in startOfWeek.timeInMillis until endOfWeek.timeInMillis) {
+                    when (calendar.get(Calendar.DAY_OF_WEEK)) {
+                        Calendar.MONDAY -> "Monday"
+                        Calendar.TUESDAY -> "Tuesday"
+                        Calendar.WEDNESDAY -> "Wednesday"
+                        Calendar.THURSDAY -> "Thursday"
+                        Calendar.FRIDAY -> "Friday"
+                        Calendar.SATURDAY -> "Saturday"
+                        else -> "Sunday"
+                    }
+                } else null
+            }
+
+            StatsFilter.MONTH -> {
+                if (calendar.get(Calendar.YEAR) == now.get(Calendar.YEAR)) {
+                    when (calendar.get(Calendar.MONTH)) {
+                        Calendar.JANUARY -> "January"
+                        Calendar.FEBRUARY -> "February"
+                        Calendar.MARCH -> "March"
+                        Calendar.APRIL -> "April"
+                        Calendar.MAY -> "May"
+                        Calendar.JUNE -> "June"
+                        Calendar.JULY -> "July"
+                        Calendar.AUGUST -> "August"
+                        Calendar.SEPTEMBER -> "September"
+                        Calendar.OCTOBER -> "October"
+                        Calendar.NOVEMBER -> "November"
+                        else -> "December"
+                    }
+                } else null
+            }
+
+            StatsFilter.YEAR -> {
+                val y = calendar.get(Calendar.YEAR)
+                if (y in 2020..now.get(Calendar.YEAR)) y.toString() else null
+            }
         }
-        grouped[key] = (grouped[key] ?: 0f) + transaction.amount.toFloat()
+
+        if (key != null) {
+            grouped[key] = (grouped[key] ?: 0f) + transaction.amount.toFloat()
+        }
     }
 
-    val orderedKeys = when (filter) {
-        StatsFilter.TODAY -> grouped.keys.sorted()
-        StatsFilter.WEEK -> listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat").filter { it in grouped.keys }
-        StatsFilter.MONTH -> grouped.keys.sortedBy { it.removePrefix("W").toIntOrNull() ?: 0 }
-        StatsFilter.YEAR -> listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec").filter { it in grouped.keys }
-        StatsFilter.ALL -> grouped.keys.sorted()
-    }
-
-    return orderedKeys.map { ReportItem(label = it, amount = grouped[it] ?: 0f) }
+    return labels.map { label -> ReportItem(label = label, amount = grouped[label] ?: 0f) }
 }
+
 
 @Composable
 fun ReportCard(
