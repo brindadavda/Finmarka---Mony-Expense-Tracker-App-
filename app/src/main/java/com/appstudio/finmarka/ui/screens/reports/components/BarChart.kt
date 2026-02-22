@@ -10,32 +10,44 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.appstudio.finmarka.data.model.ReportItem
 import com.appstudio.finmarka.ui.theme.IncomeGreen
+import com.appstudio.finmarka.ui.theme.LocalSpacing
 
 @Composable
 fun BarChart(data: List<ReportItem>) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    val spacing = LocalSpacing.current
+    val maxAmount = data.maxOfOrNull { it.amount } ?: 0f
 
-        Text("📊 Bar Chart", style = MaterialTheme.typography.titleMedium)
+    Column(verticalArrangement = Arrangement.spacedBy(spacing.sm)) {
+        if (data.isEmpty()) {
+            Text(
+                text = "No transactions found for selected period",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            return@Column
+        }
 
         data.forEach {
+            Text(
+                text = "${it.label}: ${it.amount.toInt()}",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(18.dp)
+                    .height(spacing.md)
                     .background(MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(it.amount / 100f)
-                        .height(18.dp)
+                        .fillMaxWidth(if (maxAmount == 0f) 0f else it.amount / maxAmount)
+                        .height(spacing.md)
                         .background(IncomeGreen)
                 )
             }
-
-            Text("${it.label}: ${it.amount}")
         }
     }
 }

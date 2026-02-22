@@ -261,7 +261,7 @@ private fun MainScreen(
             )
         }
         composable("reports") {
-            ReportsScreen()
+            ReportsScreen(onNavigateBack = { navControllerInner.popBackStack() })
         }
         composable("settings") {
             SettingsScreen(

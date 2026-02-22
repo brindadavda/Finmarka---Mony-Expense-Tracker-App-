@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BarChart
@@ -38,8 +37,6 @@ import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.Work
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -53,7 +50,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -73,6 +69,7 @@ import com.appstudio.finmarka.ui.theme.DashboardTextOnDark
 import com.appstudio.finmarka.ui.theme.DashboardTextOnGradient
 import com.appstudio.finmarka.ui.theme.FinMarkElevation
 import com.appstudio.finmarka.ui.theme.LocalSpacing
+import com.appstudio.finmarka.ui.components.ActionCard
 import com.appstudio.finmarka.ui.components.transactionListItems
 import com.appstudio.finmarka.ui.viewmodel.DashboardViewModel
 import java.time.LocalDate
@@ -282,36 +279,6 @@ private fun RecentTransactionsHeader(onNavigateToTransactions: () -> Unit) {
                 color = MaterialTheme.colorScheme.secondary
             )
             Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
-        }
-    }
-}
-
-@Composable
-private fun ActionCard(title: String, icon: ImageVector, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Card(
-        modifier = modifier
-            .clip(RoundedCornerShape(20.dp))
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = DashboardCardSurface)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 10.dp, vertical = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(52.dp)
-                    .clip(CircleShape)
-                    .background(DashboardCardSurfaceAlt),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(icon, contentDescription = title, tint = DashboardAccentStart)
-            }
-            Text(text = title, style = MaterialTheme.typography.titleSmall, color = DashboardTextOnGradient)
         }
     }
 }

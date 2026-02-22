@@ -2,7 +2,6 @@ package com.appstudio.finmarka.ui.screens.reports
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,6 +14,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
@@ -28,16 +32,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.appstudio.finmarka.data.model.ReportItem
 import com.appstudio.finmarka.data.model.TransactionType
 import com.appstudio.finmarka.domain.model.Transaction
-import com.appstudio.finmarka.ui.screens.reports.components.ExportButtons
+import com.appstudio.finmarka.ui.components.ActionCard
+import com.appstudio.finmarka.ui.components.AppActionTopBar
+import com.appstudio.finmarka.ui.screens.reports.components.BarChart
 import com.appstudio.finmarka.ui.theme.ExpenseRed
 import com.appstudio.finmarka.ui.theme.IncomeGreen
+import com.appstudio.finmarka.ui.theme.LocalSpacing
 import com.appstudio.finmarka.ui.viewmodel.ReportsViewModel
 import java.util.Calendar
 
@@ -45,9 +50,11 @@ enum class StatsFilter { TODAY, WEEK, MONTH, YEAR, ALL }
 
 @Composable
 fun ReportsScreen(
+    onNavigateBack: () -> Unit,
     viewModel: ReportsViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    val spacing = LocalSpacing.current
     val context = LocalContext.current
     var selectedFilter by remember { mutableStateOf(StatsFilter.MONTH) }
 
@@ -62,11 +69,13 @@ fun ReportsScreen(
         .filter { it.type == TransactionType.EXPENSE }
         .sumOf { it.amount }
 
-    val reportData = filteredTransactions.map { tx ->
-        ReportItem(
-            label = "${tx.categoryName} (${tx.type.name})",
-            amount = tx.amount.toFloat()
-        )
+    val reportData = remember(filteredTransactions) {
+        filteredTransactions.map { tx ->
+            ReportItem(
+                label = tx.categoryName,
+                amount = tx.amount.toFloat()
+            )
+        }
     }
 
     Column(
@@ -74,35 +83,15 @@ fun ReportsScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .windowInsetsPadding(WindowInsets.statusBars.union(WindowInsets.navigationBars))
-            .padding(20.dp)
+            .padding(horizontal = spacing.lg)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(spacing.md)
     ) {
-        Text(
-            text = "Reports & Analytics",
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            StatsFilter.values().forEach { filter ->
-                FilterChip(
-                    selected = selectedFilter == filter,
-                    onClick = { selectedFilter = filter },
-                    label = { Text(filter.name.lowercase().replaceFirstChar { it.uppercase() }) },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
-                        selectedLabelColor = MaterialTheme.colorScheme.primary
-                    )
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
+        AppActionTopBar(title = "Reports", onNavigationClick = onNavigateBack)
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(spacing.md)
         ) {
             ReportCard(
                 modifier = Modifier.weight(1f),
@@ -119,24 +108,65 @@ fun ReportsScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Text(
+            text = "Filter by period",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(spacing.xs)
+        ) {
+            StatsFilter.values().forEach { filter ->
+                FilterChip(
+                    selected = selectedFilter == filter,
+                    onClick = { selectedFilter = filter },
+                    label = { Text(filter.name.lowercase().replaceFirstChar { it.uppercase() }) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
+                        selectedLabelColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+            }
+        }
 
         Text(text = "Statistics", style = MaterialTheme.typography.titleMedium)
-        Spacer(modifier = Modifier.height(10.dp))
+        BarChart(data = reportData)
 
-        ReportChart(
-            income = totalIncome.toFloat(),
-            expense = totalExpense.toFloat()
-        )
+        Text(text = "Export Reports", style = MaterialTheme.typography.titleMedium)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(spacing.md)
+        ) {
+            ActionCard(
+                title = "CSV",
+                icon = Icons.Default.FileDownload,
+                onClick = { ExportHelper.exportCSV(context, reportData) },
+                modifier = Modifier.weight(1f)
+            )
+            ActionCard(
+                title = "Excel",
+                icon = Icons.Default.FileDownload,
+                onClick = { ExportHelper.exportExcel(context, reportData) },
+                modifier = Modifier.weight(1f)
+            )
+            ActionCard(
+                title = "PDF",
+                icon = Icons.Default.PictureAsPdf,
+                onClick = {
+                    ExportHelper.exportPDF(
+                        context = context,
+                        totalIncome = totalIncome,
+                        totalExpense = totalExpense,
+                        data = reportData
+                    )
+                },
+                modifier = Modifier.weight(1f)
+            )
+        }
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        ExportButtons(
-            context = context,
-            totalIncome = totalIncome,
-            totalExpense = totalExpense,
-            reportData = reportData
-        )
+        Spacer(modifier = Modifier.height(spacing.xl))
     }
 }
 
@@ -169,56 +199,17 @@ fun ReportCard(
     modifier: Modifier,
     title: String,
     value: String,
-    color: Color
+    color: androidx.compose.ui.graphics.Color
 ) {
+    val spacing = LocalSpacing.current
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(spacing.md)) {
             Text(text = title, style = MaterialTheme.typography.labelMedium)
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(spacing.xs))
             Text(text = value, style = MaterialTheme.typography.titleLarge, color = color)
-        }
-    }
-}
-
-@Composable
-fun ReportChart(income: Float, expense: Float) {
-    val maxValue = maxOf(income, expense)
-
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        ChartBar("Income", income, maxValue, IncomeGreen)
-        ChartBar("Expense", expense, maxValue, ExpenseRed)
-    }
-}
-
-@Composable
-fun ChartBar(
-    label: String,
-    value: Float,
-    maxValue: Float,
-    color: Color
-) {
-    Column {
-        Text("$label: ${value.toInt()}")
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(18.dp)
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            val fillFraction = if (maxValue == 0f) 0f else value / maxValue
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(fillFraction)
-                    .height(18.dp)
-                    .background(color)
-            )
         }
     }
 }
