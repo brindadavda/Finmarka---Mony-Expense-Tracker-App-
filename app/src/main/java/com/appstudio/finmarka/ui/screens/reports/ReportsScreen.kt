@@ -3,6 +3,7 @@ package com.appstudio.finmarka.ui.screens.reports
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
@@ -30,6 +32,7 @@ import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
@@ -95,8 +98,9 @@ fun ReportsScreen(
 
     Column(
         modifier = Modifier
+            .fillMaxHeight()
             .background(MaterialTheme.colorScheme.background)
-            .windowInsetsPadding(WindowInsets.statusBars.union(WindowInsets.navigationBars))
+            .windowInsetsPadding(WindowInsets.statusBars)
             .padding(horizontal = spacing.xl, vertical = spacing.md)
     ) {
         AppActionTopBar(title = "Reports & Analytics", onNavigationClick = onNavigateBack)
@@ -161,6 +165,7 @@ private fun FilterTabs(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CountBarChart(data: List<ChartPoint>, filter: ReportFilter, showingDefault: Boolean) {
     val spacing = LocalSpacing.current
@@ -182,7 +187,7 @@ private fun CountBarChart(data: List<ChartPoint>, filter: ReportFilter, showingD
             verticalArrangement = Arrangement.spacedBy(spacing.md)
         ) {
             Text(
-                text = "Count Overview",
+                text = "Overall Transaction Performance",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
@@ -307,6 +312,7 @@ private fun CountBarChart(data: List<ChartPoint>, filter: ReportFilter, showingD
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ChartBar(
     point: ChartPoint,
@@ -357,7 +363,7 @@ private fun ExportSection(
 ) {
     val spacing = LocalSpacing.current
     Column(verticalArrangement = Arrangement.spacedBy(spacing.md)) {
-        Text("Export", style = MaterialTheme.typography.titleMedium)
+        Text("Export", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
 
         Row(
             modifier = Modifier.fillMaxWidth(),
