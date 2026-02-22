@@ -1,5 +1,6 @@
 package com.appstudio.finmarka.ui.screens.budget
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,7 +21,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenu
@@ -42,8 +42,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.input.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -80,7 +82,6 @@ fun BudgetScreen(
     val totalBudget = state.budgets.sumOf { it.limit }
     val totalSpent = state.budgets.sumOf { it.spent }
     val remaining = totalBudget - totalSpent
-    val totalProgress = if (totalBudget > 0.0) (totalSpent / totalBudget).toFloat() else 0f
 
     Scaffold(
         topBar = {
@@ -90,10 +91,7 @@ fun BudgetScreen(
                     .background(MaterialTheme.colorScheme.background)
                     .padding(horizontal = spacing.xl, vertical = spacing.lg)
             ) {
-                AppActionTopBar(
-                    title = "Budgets",
-                    onNavigationClick = onNavigateBack
-                )
+                AppActionTopBar(title = "Budgets", onNavigationClick = onNavigateBack)
             }
         },
         floatingActionButton = {
@@ -117,13 +115,6 @@ fun BudgetScreen(
             verticalArrangement = Arrangement.spacedBy(spacing.lg)
         ) {
             item {
-                BudgetBarChartCard(
-                    budgets = state.budgets,
-                    currencyCode = viewModel.currencyCode
-                )
-            }
-
-            item {
                 BudgetMetricsRow(
                     totalBudget = totalBudget,
                     totalSpent = totalSpent,
@@ -133,11 +124,8 @@ fun BudgetScreen(
             }
 
             item {
-                BudgetSummaryCard(
-                    totalBudget = totalBudget,
-                    totalSpent = totalSpent,
-                    remaining = remaining,
-                    progress = totalProgress,
+                BudgetPieChartCard(
+                    budgets = state.budgets,
                     currencyCode = viewModel.currencyCode
                 )
             }
@@ -226,80 +214,6 @@ fun BudgetScreen(
 }
 
 @Composable
-private fun BudgetBarChartCard(
-    budgets: List<BudgetItemUi>,
-    currencyCode: String
-) {
-    val spacing = LocalSpacing.current
-    AppCard {
-        Column(verticalArrangement = Arrangement.spacedBy(spacing.md)) {
-            Text(
-                text = "Budget Chart",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            if (budgets.isEmpty()) {
-                Text(
-                    text = "No budget categories yet.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            } else {
-                val maxBudget = budgets.maxOf { it.limit }.takeIf { it > 0.0 } ?: 1.0
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(spacing.md),
-                    verticalAlignment = Alignment.Bottom
-                ) {
-                    budgets.forEach { budget ->
-                        val barProgress = (budget.spent / maxBudget).toFloat().coerceIn(0f, 1f)
-                        val barColor = if (budget.spent > budget.limit) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
-
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(spacing.xs)
-                        ) {
-                            Text(
-                                text = formatCurrency(budget.spent, currencyCode),
-                                style = MaterialTheme.typography.labelSmall,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .height(spacing.xxxl + spacing.xxxl + spacing.lg)
-                                    .width(spacing.xxl)
-                                    .background(
-                                        color = MaterialTheme.colorScheme.surfaceVariant,
-                                        shape = RoundedCornerShape(spacing.sm)
-                                    ),
-                                contentAlignment = Alignment.BottomCenter
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height((spacing.xxxl + spacing.xxxl + spacing.lg) * barProgress)
-                                        .background(color = barColor, shape = RoundedCornerShape(spacing.sm))
-                                )
-                            }
-                            Text(
-                                text = budget.name,
-                                style = MaterialTheme.typography.labelSmall,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
 private fun BudgetMetricsRow(
     totalBudget: Double,
     totalSpent: Double,
@@ -307,14 +221,13 @@ private fun BudgetMetricsRow(
     currencyCode: String
 ) {
     val spacing = LocalSpacing.current
-
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(spacing.sm)
     ) {
-        MetricPill(modifier = Modifier.weight(1f), title = "Budget", value = formatCurrency(totalBudget, currencyCode))
-        MetricPill(modifier = Modifier.weight(1f), title = "Spent", value = formatCurrency(totalSpent, currencyCode))
-        MetricPill(modifier = Modifier.weight(1f), title = "Remaining", value = formatCurrency(remaining, currencyCode))
+        MetricPill(Modifier.weight(1f), title = "Budget", value = formatCurrency(totalBudget, currencyCode))
+        MetricPill(Modifier.weight(1f), title = "Spent", value = formatCurrency(totalSpent, currencyCode))
+        MetricPill(Modifier.weight(1f), title = "Remaining", value = formatCurrency(remaining, currencyCode))
     }
 }
 
@@ -336,13 +249,91 @@ private fun MetricPill(
             verticalArrangement = Arrangement.spacedBy(spacing.xs)
         ) {
             Text(text = title, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface)
-            Text(
-                text = value,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            Text(text = value, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
+
+@Composable
+private fun BudgetPieChartCard(
+    budgets: List<BudgetItemUi>,
+    currencyCode: String
+) {
+    val spacing = LocalSpacing.current
+    val chartColors = listOf(
+        MaterialTheme.colorScheme.primary,
+        MaterialTheme.colorScheme.secondary,
+        MaterialTheme.colorScheme.tertiary,
+        MaterialTheme.colorScheme.primaryContainer,
+        MaterialTheme.colorScheme.secondaryContainer,
+        MaterialTheme.colorScheme.error
+    )
+
+    AppCard {
+        Column(verticalArrangement = Arrangement.spacedBy(spacing.md)) {
+            Text(text = "Spending by Category", style = MaterialTheme.typography.titleMedium)
+
+            if (budgets.isEmpty() || budgets.sumOf { it.spent } <= 0.0) {
+                Text(
+                    text = "No spending data for chart.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                val totalSpent = budgets.sumOf { it.spent }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(spacing.lg),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Canvas(modifier = Modifier.size(spacing.xxxl + spacing.xxxl + spacing.xxxl)) {
+                        var startAngle = -90f
+                        val strokeWidthPx = (spacing.md + spacing.sm).toPx()
+
+                        budgets.forEachIndexed { index, budget ->
+                            val sweep = ((budget.spent / totalSpent) * 360f).toFloat()
+                            val color = chartColors[index % chartColors.size]
+
+                            drawArc(
+                                color = color,
+                                startAngle = startAngle,
+                                sweepAngle = sweep,
+                                useCenter = false,
+                                topLeft = androidx.compose.ui.geometry.Offset(strokeWidthPx / 2, strokeWidthPx / 2),
+                                size = Size(size.width - strokeWidthPx, size.height - strokeWidthPx),
+                                style = Stroke(width = strokeWidthPx, cap = StrokeCap.Butt)
+                            )
+                            startAngle += sweep
+                        }
+                    }
+
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(spacing.xs)
+                    ) {
+                        budgets.forEachIndexed { index, budget ->
+                            val percent = ((budget.spent / totalSpent) * 100).toInt()
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(spacing.xs),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(spacing.md)
+                                        .background(chartColors[index % chartColors.size], shape = RoundedCornerShape(spacing.xs))
+                                )
+                                Text(
+                                    text = "${budget.name}: ${formatCurrency(budget.spent, currencyCode)} ($percent%)",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -368,7 +359,9 @@ private fun AddBudgetDialog(
             Column(verticalArrangement = Arrangement.spacedBy(spacing.md)) {
                 ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
                     OutlinedTextField(
-                        modifier = Modifier.fillMaxWidth().menuAnchor(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(),
                         value = selectedCategory?.name ?: "",
                         onValueChange = {},
                         readOnly = true,
@@ -455,51 +448,6 @@ private fun EditBudgetDialog(
 }
 
 @Composable
-private fun BudgetSummaryCard(
-    totalBudget: Double,
-    totalSpent: Double,
-    remaining: Double,
-    progress: Float,
-    currencyCode: String
-) {
-    val spacing = LocalSpacing.current
-    AppCard {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(spacing.lg),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(spacing.sm)
-            ) {
-                Text(text = "Total Budget", style = MaterialTheme.typography.labelLarge)
-                Text(text = formatCurrency(totalBudget, currencyCode), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                Text(text = "Total Spent", style = MaterialTheme.typography.labelLarge)
-                Text(text = formatCurrency(totalSpent, currencyCode), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
-                Text(text = "Remaining", style = MaterialTheme.typography.labelLarge)
-                Text(
-                    text = formatCurrency(remaining, currencyCode),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = if (remaining < 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
-                )
-            }
-
-            Box(modifier = Modifier.size(spacing.xxxl + spacing.xxxl), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(
-                    progress = { progress.coerceIn(0f, 1f) },
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                    strokeWidth = spacing.sm
-                )
-                Text(text = "${(progress * 100).toInt()}%", style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center)
-            }
-        }
-    }
-}
-
-@Composable
 private fun BudgetItemCard(
     budget: BudgetItemUi,
     currencyCode: String,
@@ -546,7 +494,9 @@ private fun BudgetItemCard(
 
             LinearProgressIndicator(
                 progress = { normalizedProgress },
-                modifier = Modifier.fillMaxWidth().height(spacing.sm),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(spacing.sm),
                 color = if (isOverBudget) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                 trackColor = MaterialTheme.colorScheme.surfaceVariant
             )
@@ -587,7 +537,7 @@ private fun BudgetScreenPreviewLight() {
 @Composable
 private fun BudgetScreenPreviewDark() {
     FinmarkaTheme(darkTheme = true) {
-        BudgetBarChartCard(
+        BudgetPieChartCard(
             budgets = listOf(
                 BudgetItemUi(budgetId = 1, categoryId = 1, name = "Food", limit = 400.0, spent = 300.0),
                 BudgetItemUi(budgetId = 2, categoryId = 2, name = "Bills", limit = 500.0, spent = 620.0)
