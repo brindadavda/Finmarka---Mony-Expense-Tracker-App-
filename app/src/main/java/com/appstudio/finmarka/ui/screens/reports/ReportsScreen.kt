@@ -167,8 +167,8 @@ private fun CountBarChart(data: List<ChartPoint>, filter: ReportFilter, showingD
     var selectedPoint by remember { mutableStateOf<ChartPoint?>(null) }
     var highlightedIndex by rememberSaveable { mutableIntStateOf(-1) }
 
-    val ySteps = (0..1000 step 100).toList()
-    val yMax = 1000
+    val ySteps = (0..45 step 5).toList()
+    val yMax = 45
 
     Card(
         shape = RoundedCornerShape(20.dp),
@@ -316,7 +316,7 @@ private fun ChartBar(
     onTap: () -> Unit,
     onLongPress: () -> Unit
 ) {
-    val barRatio = if (yMax == 0) 0f else point.value.toFloat() / yMax.toFloat()
+    val barRatio = if (yMax == 0) 0f else (point.value.toFloat() / yMax.toFloat()).coerceAtMost(1f)
     val animatedRatio by animateFloatAsState(
         targetValue = barRatio,
         animationSpec = tween(durationMillis = 300),
@@ -507,13 +507,13 @@ private fun buildChartData(transactions: List<Transaction>, filter: ReportFilter
 
 private fun defaultChartData(filter: ReportFilter): List<ChartPoint> = when (filter) {
     ReportFilter.WEEK -> listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-        .mapIndexed { idx, label -> ChartPoint(label, (idx + 1) * 20) }
+        .mapIndexed { idx, label -> ChartPoint(label, ((idx + 1) * 5).coerceAtMost(45)) }
 
     ReportFilter.MONTH -> listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
-        .mapIndexed { idx, label -> ChartPoint(label, (idx % 5 + 1) * 30) }
+        .mapIndexed { idx, label -> ChartPoint(label, ((idx % 9) + 1) * 5) }
 
     ReportFilter.YEAR -> {
         val nowYear = Calendar.getInstance().get(Calendar.YEAR)
-        (2020..nowYear).mapIndexed { idx, year -> ChartPoint(year.toString().takeLast(2), (idx % 6 + 1) * 25) }
+        (2020..nowYear).mapIndexed { idx, year -> ChartPoint(year.toString().takeLast(2), ((idx % 9) + 1) * 5) }
     }
 }
