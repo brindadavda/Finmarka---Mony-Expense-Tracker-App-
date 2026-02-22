@@ -2,7 +2,9 @@ package com.appstudio.finmarka.ui.screens.transactions
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,16 +19,25 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.NorthEast
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SouthWest
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -37,7 +48,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -46,15 +60,26 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.appstudio.finmarka.data.model.TransactionStatus
 import com.appstudio.finmarka.data.model.TransactionType
 import com.appstudio.finmarka.domain.model.Transaction
 import com.appstudio.finmarka.ui.components.AppActionTopBar
-import com.appstudio.finmarka.ui.components.transactionListItems
+import com.appstudio.finmarka.ui.theme.DashboardAccentEnd
+import com.appstudio.finmarka.ui.theme.DashboardAccentStart
+import com.appstudio.finmarka.ui.theme.DashboardCardSurface
+import com.appstudio.finmarka.ui.theme.FinMarkElevation
 import com.appstudio.finmarka.ui.theme.LocalSpacing
+import com.appstudio.finmarka.ui.util.formatDate
+import com.appstudio.finmarka.ui.util.formatDateTimeTravel
 import com.appstudio.finmarka.ui.viewmodel.TransactionsViewModel
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 
 private enum class TransactionsTab(val title: String) {
     ALL("All"),
@@ -133,18 +158,9 @@ fun TransactionsScreen(
                 contentPadding = PaddingValues(horizontal = spacing.md, vertical = spacing.md),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
             ) {
-                Icon(
-                    imageVector = Icons.Default.FilterList,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurface
-                )
+                Icon(imageVector = Icons.Default.FilterList, contentDescription = null)
                 Spacer(modifier = Modifier.size(spacing.xs))
-                Text(
-                    text = "Filter",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-
+                Text("Filter")
             }
         }
 
@@ -205,20 +221,191 @@ private fun TransactionsList(
     onDelete: (Int) -> Unit
 ) {
     val spacing = LocalSpacing.current
+    val groupedTransactions = remember(transactions) {
+        transactions
+            .sortedByDescending { it.dateTime }
+            .groupBy { Instant.ofEpochMilli(it.dateTime).atZone(ZoneId.systemDefault()).toLocalDate() }
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = spacing.xl),
         verticalArrangement = Arrangement.spacedBy(spacing.sm)
     ) {
-        transactionListItems(
-            transactions = transactions,
-            currencyCode = currencyCode,
-            onTransactionClick = onTransactionClick,
-            showSections = true,
-            enableDelete = true,
-            onDeleteConfirmed = onDelete
+        groupedTransactions.forEach { (date, dailyTransactions) ->
+            item(key = "header-${date}") {
+                DateHeader(date = date)
+            }
+            items(dailyTransactions, key = { transaction -> transaction.id }) { transaction ->
+                val dismissState = rememberSwipeToDismissBoxState(
+                    confirmValueChange = { value ->
+                        if (value == SwipeToDismissBoxValue.EndToStart || value == SwipeToDismissBoxValue.StartToEnd) {
+                            onDelete(transaction.id)
+                            true
+                        } else {
+                            false
+                        }
+                    }
+                )
+
+                SwipeToDismissBox(
+                    state = dismissState,
+                    backgroundContent = {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = spacing.md),
+                            contentAlignment = Alignment.CenterEnd
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Delete",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                ) {
+                    TransactionRow(
+                        transaction = transaction,
+                        currencyCode = currencyCode,
+                        onClick = { onTransactionClick(transaction.id) },
+                        onDelete = { onDelete(transaction.id) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+private fun DateHeader(date: LocalDate) {
+    val today = LocalDate.now()
+    val title = when (date) {
+        today -> "Today"
+        today.minusDays(1) -> "Yesterday"
+        else -> formatDate(date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli())
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = LocalSpacing.current.sm),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onBackground
         )
+        Text(
+            text = formatDate(date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun TransactionRow(
+    transaction: Transaction,
+    currencyCode: String,
+    onClick: () -> Unit,
+    onDelete: () -> Unit
+) {
+    val spacing = LocalSpacing.current
+    val cardBrush = Brush.horizontalGradient(
+        colors = listOf(
+            DashboardCardSurface.copy(alpha = 0.55f),
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f)
+        )
+    )
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = MaterialTheme.shapes.large,
+        elevation = CardDefaults.cardElevation(defaultElevation = FinMarkElevation.sm),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        border = BorderStroke(
+            width = spacing.xs / 2,
+            brush = Brush.horizontalGradient(listOf(DashboardAccentStart.copy(alpha = 0.45f), DashboardAccentEnd.copy(alpha = 0.45f)))
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(cardBrush)
+                .padding(horizontal = spacing.md, vertical = spacing.sm),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(spacing.xxxl)
+                    .background(
+                        color = transaction.displayColor.copy(alpha = 0.15f),
+                        shape = MaterialTheme.shapes.medium
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = if (transaction.type == TransactionType.INCOME) Icons.Default.SouthWest else Icons.Default.NorthEast,
+                    contentDescription = null,
+                    tint = transaction.displayColor
+                )
+            }
+            Spacer(modifier = Modifier.size(spacing.md))
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(spacing.xs)
+            ) {
+                Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = transaction.categoryName,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.size(spacing.sm))
+                    Text(
+                        text = transaction.displayAmount(currencyCode),
+                        style = MaterialTheme.typography.titleLarge,
+                        color = transaction.displayColor
+                    )
+                }
+                Text(
+                    text = "${transaction.paymentMode.name.lowercase().replaceFirstChar { it.titlecase() }} · ${formatDateTimeTravel(transaction.dateTime)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(spacing.xs)) {
+                    transaction.tagsForUi().take(2).forEach { tag ->
+                        AssistChip(
+                            onClick = {},
+                            label = { Text(tag) },
+                            shape = MaterialTheme.shapes.small,
+                            colors = AssistChipDefaults.assistChipColors(
+                                containerColor = MaterialTheme.colorScheme.surface,
+                                labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        )
+                    }
+                }
+            }
+            IconButton(onClick = onDelete) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = "Options",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }
 
@@ -334,3 +521,10 @@ private fun Transaction.matchesTab(tab: TransactionsTab): Boolean {
     }
 }
 
+private fun Transaction.tagsForUi(): List<String> = buildList {
+    add(status.name.lowercase().replaceFirstChar { it.titlecase() })
+    if (isRecurring) add("Recurring")
+    if (isReimbursement) add("Reimbursement")
+    if (isTemplate) add("Template")
+    if (isExcluded) add("Excluded")
+}
