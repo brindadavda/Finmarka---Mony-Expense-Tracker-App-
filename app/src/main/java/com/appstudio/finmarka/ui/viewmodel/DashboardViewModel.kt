@@ -74,6 +74,10 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
+
+    val getCurrencyCode: String
+        get() = preferencesManager.currencyCode
+
     // Helper to get currency from preferences
     fun formatWithPrefCurrency(amount: Double): String {
         val currency = preferencesManager.currencyCode

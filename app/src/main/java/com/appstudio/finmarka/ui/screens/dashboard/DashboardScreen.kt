@@ -41,8 +41,6 @@ import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -62,7 +60,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.appstudio.finmarka.R
-import com.appstudio.finmarka.data.model.TransactionType
 import com.appstudio.finmarka.domain.model.Transaction
 import com.appstudio.finmarka.ui.theme.DashboardAccentEnd
 import com.appstudio.finmarka.ui.theme.DashboardAccentStart
@@ -76,10 +73,8 @@ import com.appstudio.finmarka.ui.theme.DashboardTextOnDark
 import com.appstudio.finmarka.ui.theme.DashboardTextOnGradient
 import com.appstudio.finmarka.ui.theme.FinMarkElevation
 import com.appstudio.finmarka.ui.theme.LocalSpacing
+import com.appstudio.finmarka.ui.components.transactionListItems
 import com.appstudio.finmarka.ui.viewmodel.DashboardViewModel
-import com.appstudio.finmarka.ui.viewmodel.TransactionsViewModel
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.time.LocalDate
 import java.time.ZoneId
 import java.util.Locale
@@ -231,16 +226,13 @@ fun DashboardScreen(
             if (recentItems.isEmpty()) {
                 item { EmptyTransactionsCard() }
             } else {
-                items(
-                    items = recentItems,
-                    key = { it.id },
-                    contentType = { "recent_transaction" }
-                ) { transaction ->
-                    RecentTransactionCard(
-                        transaction = transaction,
-                        onClick = { onTransactionClick(transaction.id) }
-                    )
-                }
+                transactionListItems(
+                    transactions = recentItems,
+                    currencyCode = viewModel.getCurrencyCode,
+                    onTransactionClick = onTransactionClick,
+                    showSections = false,
+                    enableDelete = false
+                )
             }
         }
 
@@ -382,123 +374,4 @@ private fun MetricPill(
     }
 }
 
-@Composable
-private fun RecentTransactionCard(
-    transaction: Transaction,
-    onClick: () -> Unit,
-    viewModel: TransactionsViewModel = hiltViewModel()
-) {
-    val spacing = LocalSpacing.current
-    val isIncome = transaction.type == TransactionType.INCOME
 
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = MaterialTheme.shapes.extraLarge,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = FinMarkElevation.sm)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(spacing.lg),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(spacing.xxxl + spacing.sm)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = transaction.categoryName.toRecentIcon(),
-                    contentDescription = transaction.categoryName,
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
-
-            Spacer(modifier = Modifier.size(spacing.sm))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = transaction.categoryName,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-//                Text(
-//                    text = transaction.paymentMode.displayName,
-//                    style = MaterialTheme.typography.bodyMedium,
-//                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-//                    maxLines = 1,
-//                    overflow = TextOverflow.Ellipsis
-//                )
-
-//                Spacer(modifier = Modifier.height(spacing.sm))
-
-                Row(horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-                    TransactionTagChip(label = transaction.accountName)
-//                    transaction.note
-//                        ?.takeIf { it.isNotBlank() }
-//                        ?.let { TransactionTagChip(label = it.take(10)) }
-                }
-            }
-
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    text = transaction.displayAmount(viewModel.getCurrencyCode),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = if (isIncome) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
-                )
-                Spacer(modifier = Modifier.height(spacing.sm))
-                Text(
-                    text = transaction.dateTime.toRecentTime(),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun TransactionTagChip(label: String) {
-    FilterChip(
-        selected = false,
-        onClick = {},
-        label = {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.secondary
-            )
-        },
-        colors = FilterChipDefaults.filterChipColors(
-            containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.16f),
-            labelColor = MaterialTheme.colorScheme.secondary,
-            disabledContainerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.16f),
-            disabledLabelColor = MaterialTheme.colorScheme.secondary
-        ),
-        enabled = false,
-        border = null
-    )
-}
-
-private fun String.toRecentIcon(): ImageVector {
-    val label = lowercase(Locale.getDefault())
-    return when {
-        "food" in label || "dining" in label || "coffee" in label -> Icons.Default.Fastfood
-        "shop" in label || "amazon" in label || "buy" in label -> Icons.Default.ShoppingBag
-        "transport" in label || "fuel" in label || "car" in label -> Icons.Default.DirectionsCar
-        "salary" in label || "work" in label -> Icons.Default.Work
-        "freelance" in label || "design" in label || "tech" in label -> Icons.Default.Laptop
-        else -> Icons.Default.CardGiftcard
-    }
-}
-
-private fun Long.toRecentTime(): String {
-    return SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date(this))
-}
