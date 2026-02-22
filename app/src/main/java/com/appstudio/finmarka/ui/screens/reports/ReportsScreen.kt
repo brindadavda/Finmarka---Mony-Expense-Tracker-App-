@@ -135,7 +135,7 @@ fun ReportsScreen(
             }
         }
 
-        Text(text = "Statistics", style = MaterialTheme.typography.titleMedium)
+        Text(text = "📊 Statistics Report", style = MaterialTheme.typography.titleMedium)
         BarChart(data = chartData)
 
         Text(text = "Export Reports", style = MaterialTheme.typography.titleMedium)

@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,6 +38,7 @@ fun BarChart(data: List<ReportItem>) {
     val maxData = data.maxOfOrNull { it.amount } ?: 0f
     val axisMax = if (maxData <= 0f) 100 else (ceil(maxData / 100f).toInt() * 100)
     val axisSteps = (0..axisMax step 100).toList()
+    val chartHeight = 180.dp
 
     Column(
         modifier = Modifier
@@ -45,40 +48,7 @@ fun BarChart(data: List<ReportItem>) {
             .padding(spacing.md),
         verticalArrangement = Arrangement.spacedBy(spacing.sm)
     ) {
-        data.forEach { item ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(spacing.sm)
-            ) {
-                Text(
-                    text = item.label,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(0.36f)
-                )
-
-                Box(
-                    modifier = Modifier
-                        .weight(0.64f)
-                        .height(14.dp)
-                        .clip(MaterialTheme.shapes.small)
-                        .background(MaterialTheme.colorScheme.surface)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth((item.amount / axisMax).coerceIn(0f, 1f))
-                            .height(14.dp)
-                            .background(IncomeGreen)
-                    )
-                }
-            }
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             axisSteps.forEach { step ->
                 Text(
                     text = step.toString(),
@@ -87,5 +57,64 @@ fun BarChart(data: List<ReportItem>) {
                 )
             }
         }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(chartHeight),
+            horizontalArrangement = Arrangement.spacedBy(spacing.xs),
+            verticalAlignment = Alignment.Bottom
+        ) {
+            data.forEach { item ->
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Bottom
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(12.dp)
+                            .height(chartHeight * (item.amount / axisMax).coerceIn(0f, 1f))
+                            .clip(MaterialTheme.shapes.small)
+                            .background(IncomeGreen)
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .padding(top = spacing.xs)
+                            .size(width = 4.dp, height = 4.dp)
+                            .background(MaterialTheme.colorScheme.onSurfaceVariant)
+                    )
+                }
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(spacing.xs)
+        ) {
+            data.forEach { item ->
+                Text(
+                    text = item.label,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f),
+                    maxLines = 1
+                )
+            }
+        }
+
+        Text(
+            text = "X-Axis: Count (×100)",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
