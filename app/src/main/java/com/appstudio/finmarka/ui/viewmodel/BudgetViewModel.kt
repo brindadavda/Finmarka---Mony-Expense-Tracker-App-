@@ -17,6 +17,7 @@ import java.util.Calendar
 import javax.inject.Inject
 
 data class BudgetItemUi(
+    val budgetId: Int,
     val categoryId: Int,
     val name: String,
     val limit: Double,
@@ -70,6 +71,32 @@ class BudgetViewModel @Inject constructor(
         }
     }
 
+    fun updateBudgetAmount(budgetId: Int, newLimitAmount: Double) {
+        if (newLimitAmount <= 0.0) return
+
+        viewModelScope.launch {
+            val current = _uiState.value.budgets.firstOrNull { it.budgetId == budgetId } ?: return@launch
+            val calendar = Calendar.getInstance()
+            val month = calendar.get(Calendar.MONTH) + 1
+            val year = calendar.get(Calendar.YEAR)
+            budgetDao.update(
+                BudgetEntity(
+                    id = current.budgetId,
+                    categoryId = current.categoryId,
+                    limitAmount = newLimitAmount,
+                    month = month,
+                    year = year
+                )
+            )
+        }
+    }
+
+    fun deleteBudget(budgetId: Int) {
+        viewModelScope.launch {
+            budgetDao.deleteById(budgetId)
+        }
+    }
+
     private fun observeBudgetData() {
         val calendar = Calendar.getInstance()
         val month = calendar.get(Calendar.MONTH) + 1
@@ -113,6 +140,7 @@ class BudgetViewModel @Inject constructor(
         val budgetItems = budgets
             .map { budget ->
                 BudgetItemUi(
+                    budgetId = budget.id,
                     categoryId = budget.categoryId,
                     name = expenseCategories.find { it.id == budget.categoryId }?.name ?: "Unknown",
                     limit = budget.limitAmount,
